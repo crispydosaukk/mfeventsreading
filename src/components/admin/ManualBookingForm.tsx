@@ -5,7 +5,7 @@ import { db, storage } from '@/lib/firebase';
 import { collection, addDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-export default function ManualBookingForm({ setCustomAlert, packages = [], extras = [], onBookingCreated, depositPercentage = 30, timeSlots = [], partyHallTimeSlots = [], outdoorTimeSlots = [], initialData, onUpdate, renderMenuSelectionUI, downloadInvoicePDF, downloadMenuPDF, onClose }: { setCustomAlert: any, packages?: any[], extras?: any[], onBookingCreated?: (booking: any) => void, depositPercentage?: number, timeSlots?: string[], partyHallTimeSlots?: string[], outdoorTimeSlots?: string[], initialData?: any, onUpdate?: (booking: any) => void, renderMenuSelectionUI?: () => React.ReactNode, downloadInvoicePDF?: (booking: any, isDeposit?: boolean) => void, downloadMenuPDF?: (booking: any) => void, onClose?: () => void }) {
+export default function ManualBookingForm({ setCustomAlert, packages = [], extras = [], onBookingCreated, depositPercentage = 30, timeSlots = [], partyHallTimeSlots = [], outdoorTimeSlots = [], initialData, onUpdate, renderMenuSelectionUI, downloadInvoicePDF, downloadMenuPDF, onClose, menuCategories = {} }: { setCustomAlert: any, packages?: any[], extras?: any[], onBookingCreated?: (booking: any) => void, depositPercentage?: number, timeSlots?: string[], partyHallTimeSlots?: string[], outdoorTimeSlots?: string[], initialData?: any, onUpdate?: (booking: any) => void, renderMenuSelectionUI?: () => React.ReactNode, downloadInvoicePDF?: (booking: any, isDeposit?: boolean) => void, downloadMenuPDF?: (booking: any) => void, onClose?: () => void, menuCategories?: any }) {
   const [loading, setLoading] = useState(false);
   const [depositPreview, setDepositPreview] = useState<string | null>(null);
   const [finalPreview, setFinalPreview] = useState<string | null>(null);
@@ -34,7 +34,10 @@ export default function ManualBookingForm({ setCustomAlert, packages = [], extra
     paymentMethodDeposit: initialData?.paymentMethodDeposit || 'Bank',
     paymentMethodFinal: initialData?.paymentMethodFinal || 'Bank',
     extraCharges: initialData?.extraCharges || [],
+    selectedMenuItems: initialData?.selectedMenuItems || {},
   });
+
+  const [expandedCategoryKey, setExpandedCategoryKey] = useState<string | null>(null);
 
   // Keep track of if we're in edit mode
   const isEditMode = !!initialData || !!internalId;
@@ -213,6 +216,7 @@ export default function ManualBookingForm({ setCustomAlert, packages = [], extra
         paymentMethodFinal: currentForm.paymentMethodFinal,
         paymentMethodExtra: currentForm.paymentMethodFinal, // Extras are paid with final payment in manual booking
         extraCharges: currentForm.extraCharges,
+        selectedMenuItems: currentForm.selectedMenuItems,
         source: initialData?.source || 'direct_booking',
         ...(isEditMode ? { updatedAt: new Date().toISOString() } : { createdAt: new Date().toISOString() })
       };
@@ -247,6 +251,17 @@ export default function ManualBookingForm({ setCustomAlert, packages = [], extra
     }
   };
 
+  const getDownloadData = () => {
+    return initialData || {
+      ...form,
+      id: editingId,
+      selectedMenu: form.package,
+      guests: parseInt(form.guests) || 0,
+      baseAmount: parseFloat(form.baseAmount) || 0,
+      deposit: parseFloat(form.deposit) || 0,
+    };
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 w-full">
       <div className="border-b border-gray-100 pb-4 mb-6 flex items-center justify-between">
@@ -268,10 +283,10 @@ export default function ManualBookingForm({ setCustomAlert, packages = [], extra
 
       {viewMode === 'tracker' ? (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {/* 3-Step Tracker */}
+          {/* 4-Step Tracker */}
           <div className="relative">
              <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-100 -translate-y-1/2 rounded-full" />
-             <div className="absolute top-1/2 left-0 h-1 rounded-full transition-all duration-500" style={{ width: form.finalPaymentPaid ? '100%' : form.depositPaid ? '50%' : '0%', background: 'linear-gradient(90deg, #ED1C24, #F5A623)' }} />
+             <div className="absolute top-1/2 left-0 h-1 rounded-full transition-all duration-500" style={{ width: form.finalPaymentPaid ? '100%' : form.depositPaid ? '66%' : '33%', background: 'linear-gradient(90deg, #ED1C24, #F5A623)' }} />
              
              <div className="relative flex justify-between">
                <div className="flex flex-col items-center">
@@ -292,7 +307,14 @@ export default function ManualBookingForm({ setCustomAlert, packages = [], extra
                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-sm ring-4 ring-white transition-colors duration-300 ${form.finalPaymentPaid ? 'bg-emerald-500 text-white' : (form.depositPaid ? 'bg-amber-500 text-white ring-amber-100 scale-110' : 'bg-gray-200 text-gray-500')}`}>
                     {form.finalPaymentPaid ? <Icon name="CheckIcon" size={16} /> : '3'}
                  </div>
-                 <div className={`mt-2 text-xs font-bold ${form.finalPaymentPaid ? 'text-gray-900' : (form.depositPaid ? 'text-amber-600' : 'text-gray-400')}`}>{form.finalPaymentPaid ? 'Final Payment' : (form.depositPaid ? 'Pending Final Payment' : 'Final Payment')}</div>
+                 <div className={`mt-2 text-xs font-bold ${form.finalPaymentPaid ? 'text-gray-900' : (form.depositPaid ? 'text-amber-600' : 'text-gray-400')}`}>Final Payment</div>
+               </div>
+
+               <div className="flex flex-col items-center">
+                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-sm ring-4 ring-white transition-colors duration-300 ${form.finalPaymentPaid ? 'bg-emerald-500 text-white ring-emerald-100 scale-110' : 'bg-gray-200 text-gray-500'}`}>
+                    {form.finalPaymentPaid ? <Icon name="CheckIcon" size={16} /> : '4'}
+                 </div>
+                 <div className={`mt-2 text-xs font-bold ${form.finalPaymentPaid ? 'text-emerald-600' : 'text-gray-400'}`}>Completed</div>
                </div>
              </div>
           </div>
@@ -314,14 +336,107 @@ export default function ManualBookingForm({ setCustomAlert, packages = [], extra
                    <span className="font-semibold text-gray-900 text-right">{form.package}</span>
                  </div>
                  <div className="flex justify-between text-sm">
-                   <span className="text-gray-500">Event Date</span>
-                   <span className="font-semibold text-gray-900">{form.date} {form.time && `at ${form.time}`}</span>
+                    <span className="text-gray-500">Event Date</span>
+                    <span className="font-semibold text-gray-900">{form.date} {form.time && `at ${form.time}`}</span>
                  </div>
                  <div className="flex justify-between text-sm">
                    <span className="text-gray-500">Number of Guests</span>
                    <span className="font-semibold text-gray-900">{form.guests} Guests</span>
                  </div>
-                 {renderMenuSelectionUI && renderMenuSelectionUI()}
+                  {renderMenuSelectionUI ? renderMenuSelectionUI() : (
+                    <>
+                      {form.package && menuCategories && Object.keys(menuCategories).length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <h4 className="text-sm font-semibold text-gray-900 mb-3">Menu Selection</h4>
+                          <div className="space-y-2">
+                            {packages.find(p => p.name === form.package)?.items?.map((itemStr: string) => {
+                              const match = itemStr.match(/^(\d+)\s+(.+)$/i);
+                              if (!match) return null;
+
+                              const limit = parseInt(match[1], 10);
+                              const catName = match[2].trim().toLowerCase();
+
+                              let catKey = '';
+                              if (catName.includes('stater')) catKey = 'staters';
+                              else if (catName.includes('veg main')) catKey = 'vegMains';
+                              else if (catName.includes('paneer')) catKey = 'paneerMains';
+                              else if (catName.includes('rice') || catName.includes('noodle')) catKey = 'riceAndNoodles';
+                              else if (catName.includes('dessert')) catKey = 'dessert';
+                              else if (catName.includes('bread')) catKey = 'breads';
+                              else if (catName.includes('dhal')) catKey = 'dhal';
+
+                              if (!catKey || !menuCategories[catKey]) return null;
+
+                              const catOptions = menuCategories[catKey];
+                              const currentSelections = (form.selectedMenuItems || {} as Record<string, string[]>)[catKey] || [];
+                              const isAtLimit = currentSelections.length >= limit;
+
+                              const isExpanded = expandedCategoryKey === catKey;
+
+                              return (
+                                <div key={catKey} className="border border-gray-200 rounded-lg bg-white overflow-hidden shadow-sm">
+                                  <div
+                                    className="bg-gray-50 px-3 py-2 border-b border-gray-200 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors"
+                                    onClick={() => setExpandedCategoryKey(isExpanded ? null : catKey)}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wide">{match[2].trim()}</span>
+                                      <Icon name={isExpanded ? "ChevronUpIcon" : "ChevronDownIcon"} size={14} className="text-gray-400" />
+                                    </div>
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${currentSelections.length > limit ? 'bg-red-100 text-red-700' : currentSelections.length === limit ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
+                                      {currentSelections.length} / {limit} Selected
+                                    </span>
+                                  </div>
+                                  {isExpanded && (
+                                    <div className="p-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-40 overflow-y-auto">
+                                      {catOptions.map((opt: string) => {
+                                        const isSelected = currentSelections.includes(opt);
+                                        return (
+                                          <label key={opt} className={`flex items-start gap-2 text-[11px] font-medium p-1.5 rounded cursor-pointer transition-colors ${isSelected ? 'bg-amber-50 text-amber-900 border border-amber-200' : 'text-gray-600 hover:bg-gray-50 border border-transparent'}`}>
+                                            <input
+                                              type="checkbox"
+                                              checked={isSelected}
+                                              disabled={!isSelected && isAtLimit}
+                                              onChange={(e) => {
+                                                const checked = e.target.checked;
+                                                let newSelections = [...currentSelections];
+                                                if (checked) {
+                                                  if (newSelections.length < limit) {
+                                                    newSelections.push(opt);
+                                                  } else {
+                                                    return;
+                                                  }
+                                                } else {
+                                                  newSelections = newSelections.filter(v => v !== opt);
+                                                }
+
+                                                setForm(prev => ({
+                                                  ...prev,
+                                                  selectedMenuItems: {
+                                                    ...(prev.selectedMenuItems || {}),
+                                                    [catKey]: newSelections
+                                                  }
+                                                }));
+                                              }}
+                                              className="w-3.5 h-3.5 mt-0.5 rounded border-gray-300 text-amber-600 focus:ring-amber-500 disabled:opacity-50"
+                                            />
+                                            <span className="leading-tight flex-1">{opt}</span>
+                                          </label>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <button type="button" disabled={loading} onClick={() => handleSubmit(undefined, { selectedMenuItems: form.selectedMenuItems })} className="mt-4 w-full text-white font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all hover:scale-[1.02] shadow-sm disabled:opacity-50" style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}>
+                            <Icon name="CheckIcon" size={18} /> Save Menu Selection
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
                </div>
             </div>
 
@@ -416,87 +531,7 @@ export default function ManualBookingForm({ setCustomAlert, packages = [], extra
                    </div>
                  )}
 
-                 {/* Final Payment Section */}
-                 {form.depositPaid && !form.finalPaymentPaid ? (
-                   <div className="w-full max-w-sm mx-auto mt-4 pt-4 border-t border-gray-100 space-y-4">
-                     
-                     {/* Extras Section */}
-                     <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 space-y-3">
-                       <label className="block text-xs font-bold text-amber-900 uppercase tracking-wide">Add Extra Charges</label>
-                       {form.extraCharges.map((extra: any, idx: number) => (
-                         <div key={idx} className="flex gap-2 items-center">
-                           <input type="text" placeholder="Description" value={extra.label} onChange={e => {
-                             const newExtras = [...form.extraCharges];
-                             newExtras[idx].label = e.target.value;
-                             setForm({ ...form, extraCharges: newExtras });
-                           }} className="flex-1 text-sm border-gray-300 rounded px-2 py-1" />
-                           <input type="number" placeholder="£ Amount" value={extra.amount || ''} onChange={e => {
-                             const newExtras = [...form.extraCharges];
-                             newExtras[idx].amount = parseFloat(e.target.value) || 0;
-                             setForm({ ...form, extraCharges: newExtras });
-                           }} className="w-20 text-sm border-gray-300 rounded px-2 py-1" />
-                           <button type="button" onClick={() => {
-                             const newExtras = form.extraCharges.filter((_: any, i: number) => i !== idx);
-                             setForm({ ...form, extraCharges: newExtras });
-                           }} className="text-red-500 hover:text-red-700">
-                             <Icon name="TrashIcon" size={16} />
-                           </button>
-                         </div>
-                       ))}
-                       <button type="button" onClick={() => setForm({ ...form, extraCharges: [...form.extraCharges, { label: '', amount: 0 }] })} className="text-sm font-semibold text-amber-700 flex items-center gap-1 hover:text-amber-900">
-                         <Icon name="PlusCircleIcon" size={16} /> Add Line Item
-                       </button>
-                       <div className="pt-2 border-t border-amber-200/50 flex justify-between font-bold text-amber-900">
-                         <span>Total Extras Amount:</span>
-                         <span>£{form.extraCharges.reduce((sum: number, c: any) => sum + (c.amount || 0), 0).toFixed(2)}</span>
-                       </div>
-                     </div>
-
-                     <div>
-                       <label className="block text-xs font-bold mb-2 text-center text-gray-700 uppercase tracking-wide">Final Payment Method *</label>
-                       <select
-                         value={form.paymentMethodFinal}
-                         onChange={(e) => setForm({ ...form, paymentMethodFinal: e.target.value })}
-                         className="block w-full text-sm text-gray-700 px-4 py-2 border border-gray-200 rounded-lg focus:ring-emerald-500 focus:border-emerald-500"
-                       >
-                         <option value="Bank">Bank Transfer</option>
-                         <option value="Cash">Cash</option>
-                         <option value="Online">Online / Card</option>
-                       </select>
-                     </div>
-
-                     {!form.paymentProofFinal && !finalPreview ? (
-                       <div>
-                         <label className="block text-xs font-bold mb-2 text-center text-gray-700 uppercase tracking-wide">Upload Final Payment Screenshot *</label>
-                         <input type="file" accept="image/*,.pdf" onChange={e => { 
-                           if (e.target.files?.[0]) {
-                             const file = e.target.files[0];
-                             if (file.type.startsWith('image/')) setFinalPreview(URL.createObjectURL(file));
-                             handleFileUpload(file, 'final'); 
-                           }
-                         }} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-white file:text-gray-700 hover:file:bg-gray-100 cursor-pointer border border-gray-200 rounded-lg" />
-                       </div>
-                     ) : (
-                       <div className="flex flex-col items-center gap-2">
-                         {finalPreview && !form.paymentProofFinal ? (
-                           <div className="flex flex-col items-center gap-2 w-full">
-                             <div className="text-sm font-semibold text-amber-600 animate-pulse bg-amber-50 px-4 py-2 rounded-lg border border-amber-100 w-full text-center">Uploading screenshot...</div>
-                             <img src={finalPreview} className="w-full h-auto max-h-48 object-contain border border-gray-200 rounded-lg opacity-50 bg-white" />
-                           </div>
-                         ) : (
-                           <>
-                             <div className="flex items-center justify-center gap-2 text-emerald-600 text-sm font-bold bg-emerald-50 px-4 py-3 rounded-lg border border-emerald-100 w-full">
-                               <Icon name="CheckCircleIcon" size={18} /> Final Screenshot Uploaded
-                             </div>
-                             {(form.paymentProofFinal?.startsWith('http') || form.paymentProofFinal?.startsWith('data:image')) && (
-                               <img src={form.paymentProofFinal} alt="Final Proof" className="w-full h-auto max-h-48 object-contain border border-gray-200 rounded-lg shadow-sm bg-white" />
-                             )}
-                           </>
-                         )}
-                       </div>
-                     )}
-                   </div>
-                 ) : form.finalPaymentPaid ? (
+                 {form.finalPaymentPaid && (
                    <div className="w-full max-w-sm mx-auto mt-4 pt-4 border-t border-gray-100">
                       <div className="flex flex-col items-center gap-2">
                         <div className="flex items-center justify-center gap-2 text-emerald-600 text-sm font-bold bg-emerald-50 px-4 py-3 rounded-lg border border-emerald-100 w-full">
@@ -507,7 +542,7 @@ export default function ManualBookingForm({ setCustomAlert, packages = [], extra
                         )}
                       </div>
                    </div>
-                 ) : null}
+                 )}
                </div>
             </div>
           </div>
@@ -515,73 +550,231 @@ export default function ManualBookingForm({ setCustomAlert, packages = [], extra
           {/* Action Area */}
           <div className="flex flex-col items-center justify-center p-6 bg-white border border-gray-200 rounded-2xl shadow-sm mt-4 gap-4">
              {!form.depositPaid ? (
-               <div className="w-full flex flex-col items-center gap-3">
-                 <button type="button" disabled={loading || !form.paymentProofDeposit} onClick={() => { setForm({...form, depositPaid: true}); handleSubmit(undefined, { depositPaid: true }); }} className="w-full text-white font-bold py-3.5 px-8 rounded-xl flex items-center justify-center gap-2 transition-all hover:scale-105 shadow-md disabled:opacity-50 disabled:hover:scale-100" style={{ background: 'linear-gradient(135deg, #ED1C24, #F5A623)' }} title={!form.paymentProofDeposit ? "Please upload a screenshot first" : ""}>
-                    <Icon name="BanknotesIcon" size={20} />
-                    {loading ? 'Updating...' : 'Mark Deposit as Paid & Continue'}
-                 </button>
-               </div>
-             ) : !form.finalPaymentPaid ? (
-               <div className="w-full flex flex-col items-center gap-3">
-                 {downloadMenuPDF && initialData && (
-                   <button type="button" onClick={() => downloadMenuPDF(initialData)} className="w-full flex items-center gap-1.5 text-sm font-semibold px-4 py-3 rounded-xl justify-center text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 shadow-sm transition-colors mb-2">
-                     <Icon name="ArrowDownTrayIcon" size={18} />
-                     Download Menu PDF
-                   </button>
-                 )}
-                 {downloadInvoicePDF && initialData && (
-                   <button type="button" onClick={() => downloadInvoicePDF(initialData, true)} className="w-full flex items-center gap-1.5 text-sm font-semibold px-4 py-3 rounded-xl justify-center text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 shadow-sm transition-colors mb-2">
-                     <Icon name="ArrowDownTrayIcon" size={18} />
-                     Download Deposit Invoice PDF
-                   </button>
-                 )}
-                 <button type="button" disabled={loading} onClick={() => handleSubmit()} className="w-full text-gray-700 font-bold py-3.5 px-8 rounded-xl flex items-center justify-center gap-2 transition-all hover:bg-gray-50 border border-gray-300 shadow-sm disabled:opacity-50 mt-4 mb-2">
-                    <Icon name="CheckIcon" size={20} />
-                    {loading ? 'Saving...' : 'Save & Update Booking Details'}
-                 </button>
+                <div className="w-full flex flex-col items-center gap-3">
+                  <div className="grid grid-cols-2 gap-3 w-full">
+                    {downloadMenuPDF && editingId && (
+                      <button type="button" onClick={() => downloadMenuPDF(getDownloadData())} className="w-full flex items-center gap-1.5 text-sm font-semibold px-4 py-3 rounded-xl justify-center text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 shadow-sm transition-colors mb-2">
+                        <Icon name="ArrowDownTrayIcon" size={18} />
+                        Menu PDF
+                      </button>
+                    )}
+                    {downloadInvoicePDF && editingId && (
+                      <button type="button" onClick={() => downloadInvoicePDF(getDownloadData(), true)} className="w-full flex items-center gap-1.5 text-sm font-semibold px-4 py-3 rounded-xl justify-center text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 shadow-sm transition-colors mb-2">
+                        <Icon name="ArrowDownTrayIcon" size={18} />
+                        Deposit Invoice
+                      </button>
+                    )}
+                  </div>
+                  <button type="button" onClick={() => {
+                     const customerName = form.name || 'Customer';
+                     const eventDate = form.date ? new Date(form.date).toLocaleDateString('en-GB') : '';
+                     const depositAmount = parseFloat(form.deposit || '0').toFixed(2);
+                     const totalAmount = (parseFloat(form.baseAmount || '0') * (1 + (form.vatRate || 0) / 100)).toFixed(2);
+                     
+                     let menuText = '';
+                     const categoryLabels: Record<string, string> = {
+                       staters: 'Starters', vegMains: 'Veg Mains', paneerMains: 'Paneer Mains',
+                       riceAndNoodles: 'Rice/Noodles', dessert: 'Desserts', breads: 'Breads', dhal: 'Dhal'
+                     };
+                     if (form.selectedMenuItems) {
+                       for (const [key, items] of Object.entries(form.selectedMenuItems)) {
+                         if (items && Array.isArray(items) && items.length > 0) {
+                           const label = categoryLabels[key] || key;
+                           menuText += `\n*${label}:*\n- ${items.join('\n- ')}\n`;
+                         }
+                       }
+                     }
 
-                 <div className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Or complete final step:</div>
+                     const text = `Dear ${customerName},\n\nThank you for choosing Madras Flavours! We are excited to cater for your upcoming event${eventDate ? ` on ${eventDate}` : ''}.\n\n*Here is your Selected Menu:*${menuText}\n*Payment Summary:*\n- Total Event Amount: £${totalAmount}\n- *Deposit Due Now: £${depositAmount}*\n\nKindly review the menu selection above and proceed with the deposit payment of £${depositAmount} to confirm your booking.\n\nLet us know if you need our bank details for the transfer or if you have any questions.\n\nBest regards,\nMadras Flavours Team`;
+                     
+                     const encodedText = encodeURIComponent(text);
+                     const phone = form.phone ? form.phone.replace(/\D/g, '') : '';
+                     window.open(`https://wa.me/${phone}?text=${encodedText}`, '_blank');
+                  }} className="w-full flex items-center gap-1.5 text-sm font-semibold px-4 py-3 rounded-xl justify-center text-green-800 bg-green-50 border border-green-300 hover:bg-green-100 shadow-sm transition-colors mb-2">
+                    <Icon name="ChatBubbleLeftEllipsisIcon" size={18} />
+                    WhatsApp Menu & Deposit Details to Customer
+                  </button>
+                  <button type="button" disabled={loading || !form.paymentProofDeposit} onClick={() => { setForm({...form, depositPaid: true}); handleSubmit(undefined, { depositPaid: true }); }} className="w-full text-white font-bold py-3.5 px-8 rounded-xl flex items-center justify-center gap-2 transition-all hover:scale-105 shadow-md disabled:opacity-50 disabled:hover:scale-100" style={{ background: 'linear-gradient(135deg, #ED1C24, #F5A623)' }} title={!form.paymentProofDeposit ? "Please upload a screenshot first" : ""}>
+                     <Icon name="BanknotesIcon" size={20} />
+                     {loading ? 'Updating...' : 'Mark Deposit as Paid & Continue'}
+                  </button>
+                </div>
+              ) : !form.finalPaymentPaid ? (
+                <div className="w-full flex flex-col items-center gap-3">
+                   {/* Final Payment Form (Extras + Screenshot) */}
+                   <div className="w-full bg-amber-50/50 p-5 rounded-xl border border-amber-200 space-y-6 mb-4">
+                     <h3 className="font-bold text-gray-900 flex items-center gap-2 border-b border-amber-200 pb-2">
+                       <Icon name="BanknotesIcon" size={18} style={{ color: '#F5A623' }} />
+                       Final Payment Step
+                     </h3>
 
-                 <button type="button" disabled={loading} onClick={async () => { 
-                   setForm({...form, finalPaymentPaid: true}); 
-                   await handleSubmit(undefined, { finalPaymentPaid: true }); 
-                   setShowCompletionPopup(true); 
-                 }} className="w-full text-white font-bold py-3.5 px-8 rounded-xl flex items-center justify-center gap-2 transition-all hover:scale-105 shadow-md disabled:opacity-50 disabled:hover:scale-100" style={{ background: 'linear-gradient(135deg, #ED1C24, #F5A623)' }} title={!form.paymentProofFinal ? "Please upload a screenshot first" : ""}>
-                    <Icon name="CheckCircleIcon" size={20} />
-                    {loading ? 'Updating...' : 'Submit Final Payment & Complete'}
-                 </button>
-               </div>
-             ) : (
-               <div className="w-full flex flex-col items-center gap-3">
-                 <div className="text-emerald-600 font-bold flex flex-col items-center gap-2 mb-2">
-                    <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
-                      <Icon name="CheckCircleIcon" size={24} className="text-emerald-600" />
-                    </div>
-                    <div className="text-lg">Booking Completed & Fully Paid!</div>
-                 </div>
-                 {downloadMenuPDF && initialData && (
-                   <button type="button" onClick={() => downloadMenuPDF(initialData)} className="w-full flex items-center gap-1.5 text-sm font-semibold px-4 py-3 rounded-xl justify-center text-blue-800 bg-white border border-blue-300 hover:bg-blue-50 shadow-sm transition-colors">
-                     <Icon name="ArrowDownTrayIcon" size={18} />
-                     Download Menu PDF
-                   </button>
-                 )}
-                 {downloadInvoicePDF && initialData && (
-                   <button type="button" onClick={() => downloadInvoicePDF(initialData, true)} className="w-full flex items-center gap-1.5 text-sm font-semibold px-4 py-3 rounded-xl justify-center text-amber-800 bg-white border border-amber-300 hover:bg-amber-50 shadow-sm transition-colors">
-                     <Icon name="ArrowDownTrayIcon" size={18} />
-                     Download Deposit Invoice PDF
-                   </button>
-                 )}
-                 {downloadInvoicePDF && initialData && (
-                   <button type="button" onClick={() => downloadInvoicePDF(initialData)} className="w-full flex items-center gap-1.5 text-sm font-semibold px-4 py-3 rounded-xl justify-center text-emerald-800 bg-white border border-emerald-300 hover:bg-emerald-50 shadow-sm transition-colors">
-                     <Icon name="ArrowDownTrayIcon" size={18} />
-                     Download Final Invoice PDF
-                   </button>
-                 )}
-                 <button type="button" onClick={() => onClose && onClose()} className="w-full mt-2 flex items-center gap-1.5 text-sm font-bold px-4 py-3 rounded-xl justify-center text-gray-700 bg-gray-100 hover:bg-gray-200 shadow-sm transition-colors uppercase tracking-wide">
-                   Close Event
-                 </button>
-               </div>
-             )}
+                     {/* Extras Section */}
+                     <div className="space-y-3">
+                       <label className="block text-xs font-bold text-amber-900 uppercase tracking-wide">Add Extra Charges</label>
+                       {form.extraCharges.map((extra: any, idx: number) => (
+                         <div key={idx} className="flex gap-2 items-center">
+                           <input type="text" placeholder="Description" value={extra.label} onChange={e => {
+                             const newExtras = [...form.extraCharges];
+                             newExtras[idx].label = e.target.value;
+                             setForm({ ...form, extraCharges: newExtras });
+                           }} className="flex-1 text-sm border border-gray-300 rounded px-3 py-2 bg-white" />
+                           <input type="number" placeholder="£ Amount" value={extra.amount || ''} onChange={e => {
+                             const newExtras = [...form.extraCharges];
+                             newExtras[idx].amount = parseFloat(e.target.value) || 0;
+                             setForm({ ...form, extraCharges: newExtras });
+                           }} className="w-24 text-sm border border-gray-300 rounded px-3 py-2 bg-white" />
+                           <button type="button" onClick={() => {
+                             const newExtras = form.extraCharges.filter((_: any, i: number) => i !== idx);
+                             setForm({ ...form, extraCharges: newExtras });
+                           }} className="text-red-500 hover:text-red-700 p-2">
+                             <Icon name="TrashIcon" size={16} />
+                           </button>
+                         </div>
+                       ))}
+                       <button type="button" onClick={() => setForm({ ...form, extraCharges: [...form.extraCharges, { label: '', amount: 0 }] })} className="text-sm font-semibold text-amber-700 flex items-center gap-1 hover:text-amber-900 mt-2">
+                         <Icon name="PlusCircleIcon" size={16} /> Add Line Item
+                       </button>
+                     </div>
+
+                     {/* Final Payment Calculation Summary */}
+                     <div className="bg-white p-4 rounded-xl border border-amber-200 shadow-sm space-y-2 mt-4">
+                       <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wide border-b border-gray-100 pb-2 mb-2">Final Payment Calculation</h4>
+                       <div className="flex justify-between text-sm text-gray-600">
+                         <span>Base Amount</span>
+                         <span>£{parseFloat(form.baseAmount || '0').toFixed(2)}</span>
+                       </div>
+                       {form.vatRate > 0 && (
+                         <div className="flex justify-between text-sm text-gray-600">
+                           <span>VAT ({form.vatRate}%)</span>
+                           <span>£{(parseFloat(form.baseAmount || '0') * (form.vatRate / 100)).toFixed(2)}</span>
+                         </div>
+                       )}
+                       <div className="flex justify-between text-sm font-semibold text-gray-800 pb-2 border-b border-gray-100">
+                         <span>Total Event Amount</span>
+                         <span>£{(parseFloat(form.baseAmount || '0') * (1 + form.vatRate / 100)).toFixed(2)}</span>
+                       </div>
+                       <div className="flex justify-between text-sm text-gray-600 pt-1">
+                         <span>Deposit Paid</span>
+                         <span className="text-emerald-600">- £{parseFloat(form.deposit || '0').toFixed(2)}</span>
+                       </div>
+                       {form.extraCharges.length > 0 && (
+                         <div className="flex justify-between text-sm text-gray-600">
+                           <span>Total Extra Charges</span>
+                           <span className="text-amber-600">+ £{form.extraCharges.reduce((sum: number, c: any) => sum + (c.amount || 0), 0).toFixed(2)}</span>
+                         </div>
+                       )}
+                       <div className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-200 mt-2">
+                         <span>Final Pending Balance</span>
+                         <span>£{(((parseFloat(form.baseAmount || '0') * (1 + form.vatRate / 100)) - parseFloat(form.deposit || '0')) + form.extraCharges.reduce((sum: number, c: any) => sum + (c.amount || 0), 0)).toFixed(2)}</span>
+                       </div>
+                     </div>
+
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-amber-200 mt-4">
+                       <div>
+                         <label className="block text-xs font-bold mb-2 text-gray-700 uppercase tracking-wide">Final Payment Method *</label>
+                         <select
+                           value={form.paymentMethodFinal}
+                           onChange={(e) => setForm({ ...form, paymentMethodFinal: e.target.value })}
+                           className="block w-full text-sm text-gray-700 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+                         >
+                           <option value="Bank">Bank Transfer</option>
+                           <option value="Cash">Cash</option>
+                           <option value="Online">Online / Card</option>
+                         </select>
+                       </div>
+
+                       {!form.paymentProofFinal && !finalPreview ? (
+                         <div>
+                           <label className="block text-xs font-bold mb-2 text-gray-700 uppercase tracking-wide">Upload Final Screenshot *</label>
+                           <input type="file" accept="image/*,.pdf" onChange={e => { 
+                             if (e.target.files?.[0]) {
+                               const file = e.target.files[0];
+                               if (file.type.startsWith('image/')) setFinalPreview(URL.createObjectURL(file));
+                               handleFileUpload(file, 'final'); 
+                             }
+                           }} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer border border-gray-300 rounded-lg bg-white" />
+                         </div>
+                       ) : (
+                         <div className="flex flex-col gap-2">
+                           <label className="block text-xs font-bold mb-2 text-gray-700 uppercase tracking-wide">Final Screenshot</label>
+                           {finalPreview && !form.paymentProofFinal ? (
+                             <div className="text-sm font-semibold text-amber-600 animate-pulse bg-amber-50 px-4 py-2 rounded-lg border border-amber-100 text-center">Uploading...</div>
+                           ) : (
+                             <div className="flex items-center justify-center gap-2 text-emerald-600 text-sm font-bold bg-emerald-50 px-4 py-2 rounded-lg border border-emerald-200 w-full">
+                               <Icon name="CheckCircleIcon" size={18} /> Uploaded Successfully
+                             </div>
+                           )}
+                         </div>
+                       )}
+                     </div>
+                   </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
+                    {downloadMenuPDF && editingId && (
+                      <button type="button" onClick={() => downloadMenuPDF(getDownloadData())} className="w-full flex items-center gap-1.5 text-sm font-semibold px-4 py-3 rounded-xl justify-center text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 shadow-sm transition-colors">
+                        <Icon name="ArrowDownTrayIcon" size={18} />
+                        Menu PDF
+                      </button>
+                    )}
+                    {downloadInvoicePDF && editingId && (
+                      <button type="button" onClick={() => downloadInvoicePDF(getDownloadData(), true)} className="w-full flex items-center gap-1.5 text-sm font-semibold px-4 py-3 rounded-xl justify-center text-amber-700 bg-amber-50 border border-amber-200 hover:bg-amber-100 shadow-sm transition-colors">
+                        <Icon name="ArrowDownTrayIcon" size={18} />
+                        Deposit Invoice
+                      </button>
+                    )}
+                    {downloadInvoicePDF && editingId && (
+                      <button type="button" onClick={() => downloadInvoicePDF(getDownloadData(), false)} className="w-full flex items-center gap-1.5 text-sm font-semibold px-4 py-3 rounded-xl justify-center text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 shadow-sm transition-colors">
+                        <Icon name="ArrowDownTrayIcon" size={18} />
+                        Final Invoice
+                      </button>
+                    )}
+                  </div>
+
+                  <button type="button" disabled={loading} onClick={() => handleSubmit()} className="w-full text-gray-700 font-bold py-3.5 px-8 rounded-xl flex items-center justify-center gap-2 transition-all hover:bg-gray-50 border border-gray-300 shadow-sm disabled:opacity-50 mt-2 mb-2">
+                     <Icon name="CheckIcon" size={20} />
+                     {loading ? 'Saving...' : 'Save & Update Booking Details'}
+                  </button>
+ 
+                  <button type="button" disabled={loading || !form.paymentProofFinal} onClick={async () => { 
+                    setForm({...form, finalPaymentPaid: true}); 
+                    await handleSubmit(undefined, { finalPaymentPaid: true }); 
+                    setShowCompletionPopup(true); 
+                  }} className="w-full text-white font-bold py-4 px-8 rounded-xl flex items-center justify-center gap-2 transition-all hover:scale-[1.02] shadow-md disabled:opacity-50 disabled:hover:scale-100" style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }} title={!form.paymentProofFinal ? "Please upload final payment screenshot first" : ""}>
+                     <Icon name="CheckCircleIcon" size={20} />
+                     {loading ? 'Updating...' : 'Submit Final Payment & Close Event'}
+                  </button>
+                </div>
+              ) : (
+                <div className="w-full flex flex-col items-center gap-3">
+                  <div className="text-emerald-600 font-bold flex flex-col items-center gap-2 mb-2">
+                     <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                       <Icon name="CheckCircleIcon" size={24} className="text-emerald-600" />
+                     </div>
+                     <div className="text-lg">Booking Completed & Fully Paid!</div>
+                  </div>
+                  {downloadMenuPDF && editingId && (
+                    <button type="button" onClick={() => downloadMenuPDF(getDownloadData())} className="w-full flex items-center gap-1.5 text-sm font-semibold px-4 py-3 rounded-xl justify-center text-blue-800 bg-white border border-blue-300 hover:bg-blue-50 shadow-sm transition-colors">
+                      <Icon name="ArrowDownTrayIcon" size={18} />
+                      Download Menu PDF
+                    </button>
+                  )}
+                  {downloadInvoicePDF && editingId && (
+                    <button type="button" onClick={() => downloadInvoicePDF(getDownloadData(), true)} className="w-full flex items-center gap-1.5 text-sm font-semibold px-4 py-3 rounded-xl justify-center text-amber-800 bg-white border border-amber-300 hover:bg-amber-50 shadow-sm transition-colors">
+                      <Icon name="ArrowDownTrayIcon" size={18} />
+                      Download Deposit Invoice PDF
+                    </button>
+                  )}
+                  {downloadInvoicePDF && editingId && (
+                    <button type="button" onClick={() => downloadInvoicePDF(getDownloadData())} className="w-full flex items-center gap-1.5 text-sm font-semibold px-4 py-3 rounded-xl justify-center text-emerald-800 bg-white border border-emerald-300 hover:bg-emerald-50 shadow-sm transition-colors">
+                      <Icon name="ArrowDownTrayIcon" size={18} />
+                      Download Final Invoice PDF
+                    </button>
+                  )}
+                  <button type="button" onClick={() => onClose && onClose()} className="w-full mt-2 flex items-center gap-1.5 text-sm font-bold px-4 py-3 rounded-xl justify-center text-gray-700 bg-gray-100 hover:bg-gray-200 shadow-sm transition-colors uppercase tracking-wide">
+                    Close Event
+                  </button>
+                </div>
+              )}
           </div>
         </div>
       ) : (
@@ -711,41 +904,6 @@ export default function ManualBookingForm({ setCustomAlert, packages = [], extra
           </div>
         </div>
 
-        {/* Extra Charges Section (Dynamic) */}
-        <div className="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-200">
-          <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide">Standard Adjustments (Fixed Fees) / Extras</label>
-          {(form.extraCharges || []).map((extra: any, idx: number) => (
-            <div key={idx} className="flex gap-2 items-center">
-              <input type="text" placeholder="Description" value={extra.label || ''} onChange={e => {
-                const newExtras = [...(form.extraCharges || [])];
-                if (newExtras[idx]) {
-                  newExtras[idx].label = e.target.value;
-                  setForm({ ...form, extraCharges: newExtras });
-                }
-              }} className="flex-1 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#ED1C24]" />
-              <input type="number" placeholder="£ Amount" value={extra.amount || ''} onChange={e => {
-                const newExtras = [...(form.extraCharges || [])];
-                if (newExtras[idx]) {
-                  newExtras[idx].amount = parseFloat(e.target.value) || 0;
-                  setForm({ ...form, extraCharges: newExtras });
-                }
-              }} className="w-24 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#ED1C24]" />
-              <button type="button" onClick={() => {
-                const newExtras = (form.extraCharges || []).filter((_: any, i: number) => i !== idx);
-                setForm({ ...form, extraCharges: newExtras });
-              }} className="p-2 text-gray-400 hover:text-red-500 transition-colors">
-                <Icon name="TrashIcon" size={18} />
-              </button>
-            </div>
-          ))}
-          <button type="button" onClick={() => setForm({ ...form, extraCharges: [...(form.extraCharges || []), { label: '', amount: 0 }] })} className="text-sm font-semibold text-emerald-600 flex items-center gap-1 hover:text-emerald-700 mt-2 transition-colors">
-            <Icon name="PlusCircleIcon" size={18} /> Add New Charge
-          </button>
-          <div className="pt-3 border-t border-gray-200 flex justify-between font-bold text-gray-800 text-sm">
-            <span>Total Extras Amount:</span>
-            <span>£{(form.extraCharges || []).reduce((sum: number, c: any) => sum + (c.amount || 0), 0).toFixed(2)}</span>
-          </div>
-        </div>
 
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1">Additional Notes</label>

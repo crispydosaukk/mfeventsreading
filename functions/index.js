@@ -8,6 +8,30 @@ exports.sendBookingEmail = onCall(async (request) => {
   try {
     const data = request.data;
     
+    // Fetch notification settings
+    let notificationEmails = 'rahulbadugu22@gmail.com, catering@madrasflavours.co.uk, Digitalbotsolutions@gmail.com';
+    let notificationsEnabled = true;
+    
+    try {
+      const settingsDoc = await admin.firestore().collection('site_data').doc('notification_settings').get();
+      if (settingsDoc.exists) {
+        const settingsData = settingsDoc.data();
+        if (settingsData.enabled === false) {
+          notificationsEnabled = false;
+        }
+        if (settingsData.emails && typeof settingsData.emails === 'string' && settingsData.emails.trim() !== '') {
+          notificationEmails = settingsData.emails;
+        }
+      }
+    } catch (e) {
+      console.error('Error fetching notification settings:', e);
+    }
+
+    if (!notificationsEnabled) {
+      console.log('Email notifications are disabled in settings. Skipping email.');
+      return { success: true, message: 'Emails disabled' };
+    }
+    
     // Use environment variables or fallback to hardcoded credentials
     const emailUser = process.env.EMAIL_USER || 'mfcentralkitchen@gmail.com';
     const emailPass = process.env.EMAIL_PASS || 'rfznermtzbowtinn';
@@ -24,7 +48,7 @@ exports.sendBookingEmail = onCall(async (request) => {
     
     const mailOptions = {
       from: `"Madras Flavours Events" <${emailUser}>`,
-      to: 'rahulbadugu22@gmail.com, catering@madrasflavours.co.uk, Digitalbotsolutions@gmail.com',
+      to: notificationEmails,
       subject: `New ${serviceName} Request`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">

@@ -296,6 +296,7 @@ const WHATSAPP_TERMS_TEXT = `*Important Terms & Conditions:*
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
+  const [showDirectBookingHistory, setShowDirectBookingHistory] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isEditingBookingDate, setIsEditingBookingDate] = useState(false);
@@ -568,6 +569,12 @@ export default function AdminPage() {
   const [newPartyHallTimeSlot, setNewPartyHallTimeSlot] = useState('');
   const [newOutdoorTimeSlot, setNewOutdoorTimeSlot] = useState('');
 
+  const [notificationSettings, setNotificationSettings] = useState({
+    enabled: true,
+    emails: 'rahulbadugu22@gmail.com, catering@madrasflavours.co.uk, Digitalbotsolutions@gmail.com'
+  });
+  const [isSavingNotificationSettings, setIsSavingNotificationSettings] = useState(false);
+
   useEffect(() => {
     return onSnapshot(doc(db, 'site_data', 'form_settings'), (docSnap) => {
       if (docSnap.exists()) {
@@ -576,6 +583,18 @@ export default function AdminPage() {
           timeSlots: data.timeSlots || ['Lunch (12:00pm - 4:00pm)', 'Dinner (6:00pm - 11:30pm)'],
           partyHallTimeSlots: data.partyHallTimeSlots || data.timeSlots || ['Lunch (12:00pm - 4:00pm)', 'Dinner (6:00pm - 11:30pm)'],
           outdoorTimeSlots: data.outdoorTimeSlots || data.timeSlots || ['Lunch (12:00pm - 4:00pm)', 'Dinner (6:00pm - 11:30pm)']
+        });
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    return onSnapshot(doc(db, 'site_data', 'notification_settings'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setNotificationSettings({
+          enabled: data.enabled !== undefined ? data.enabled : true,
+          emails: data.emails || 'rahulbadugu22@gmail.com, catering@madrasflavours.co.uk, Digitalbotsolutions@gmail.com'
         });
       }
     });
@@ -1548,6 +1567,17 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
     }
   };
 
+  const saveNotificationSettings = async () => {
+    setIsSavingNotificationSettings(true);
+    try {
+      await setDoc(doc(db, 'site_data', 'notification_settings'), notificationSettings, { merge: true });
+      setCustomAlert({ message: 'Notification settings saved successfully.', type: 'success' });
+    } catch (error: any) {
+      setCustomAlert({ message: 'Error saving notification settings: ' + error.message, type: 'error' });
+    }
+    setIsSavingNotificationSettings(false);
+  };
+
   const saveFormSettings = async () => {
     setIsSavingFormSettings(true);
     try {
@@ -1881,7 +1911,7 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
 
     // Build menu items HTML
     let invoiceMenuItemsHTML = '';
-    if (booking.selectedMenuItems && Object.keys(booking.selectedMenuItems).length > 0) {
+    if (!isDepositInvoice && booking.selectedMenuItems && Object.keys(booking.selectedMenuItems).length > 0) {
       invoiceMenuItemsHTML += '<div style="margin-top: 10px; font-size: 13px;"><strong>Selected Menu Items:</strong><br/>';
       const categoryLabels: Record<string, string> = {
         staters: 'Starters', vegMains: 'Veg Mains', paneerMains: 'Paneer Mains',
@@ -2307,10 +2337,18 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
     printWindow.document.close();
   };
 
-  const enquiries = bookings.filter(b => b.status === 'new_enquiry');
-  const activeBookings = bookings.filter(b => b.status !== 'new_enquiry' && b.status !== 'completed');
+  const isDirectBooking = (b: any) => b.source === 'direct_booking' || b.paymentMethodDeposit !== undefined;
+
+  const enquiries = bookings.filter(b => b.status === 'new_enquiry' && !isDirectBooking(b));
+  const activeBookings = bookings.filter(b => b.status !== 'new_enquiry' && b.status !== 'completed' && !isDirectBooking(b));
   const HISTORY_STATUSES = ['deposit_confirmed', 'event_scheduled', 'final_invoice_sent', 'final_payment_received', 'event_completed', 'completed'];
-  const completedBookings = bookings.filter(b => HISTORY_STATUSES.includes(b.status)).sort((a, b) => {
+  const completedBookings = bookings.filter(b => HISTORY_STATUSES.includes(b.status) && !isDirectBooking(b)).sort((a, b) => {
+    const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : new Date(a.date).getTime());
+    const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : new Date(b.date).getTime());
+    return bTime - aTime;
+  });
+
+  const directBookingsHistory = bookings.filter(b => isDirectBooking(b)).sort((a, b) => {
     const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : new Date(a.date).getTime());
     const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : new Date(b.date).getTime());
     return bTime - aTime;
@@ -2396,6 +2434,7 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
     { id: 'overview', label: 'Overview', icon: 'Squares2X2Icon' },
     { id: 'enquiries', label: 'Enquiries', icon: 'InboxIcon', badge: stats.newEnquiries, requiredPerm: 'manage_enquiries' },
     { id: 'bookings', label: 'Bookings', icon: 'CalendarDaysIcon', badge: activeBookings.length || undefined, requiredPerm: 'manage_bookings' },
+    { id: 'manual_booking', label: 'Direct Booking', icon: 'PlusCircleIcon', requiredPerm: 'manage_manual_booking' },
     { id: 'calendar', label: 'Calendar', icon: 'CalendarIcon', requiredPerm: 'manage_calendar' },
     { id: 'customers', label: 'Customers', icon: 'UsersIcon', requiredPerm: 'manage_customers' },
     { id: 'payments', label: 'Payments', icon: 'CreditCardIcon', requiredPerm: 'manage_payments' },
@@ -2405,7 +2444,6 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
     { id: 'settings', label: 'Settings', icon: 'Cog6ToothIcon', requiredPerm: 'manage_settings' },
     { id: 'access', label: 'Access Control', icon: 'ShieldCheckIcon', requiredPerm: 'manage_access' },
     { id: 'tracker', label: 'Booking Tracker', icon: 'MapIcon', requiredPerm: 'manage_tracker' },
-    // { id: 'manual_booking', label: 'Direct Booking', icon: 'PlusCircleIcon', requiredPerm: 'manage_manual_booking' },
   ];
 
   const visibleNavItems = navItems.filter(item => {
@@ -2575,16 +2613,71 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
           {/* ─── MANUAL BOOKING ─── */}
           {activeTab === 'manual_booking' && (
             <div className="space-y-6">
-              <ManualBookingForm
-                setCustomAlert={setCustomAlert}
-                packages={editableNewPackages}
-                extras={EXTRAS}
-                onBookingCreated={(newBooking) => setCustomAlert({ message: `Booking #${newBooking.id.slice(-6).toUpperCase()} has been successfully created.`, type: 'success' })}
-                depositPercentage={pricingDetails.depositPercentage}
-                timeSlots={formSettings.timeSlots}
-                partyHallTimeSlots={formSettings.partyHallTimeSlots}
-                outdoorTimeSlots={formSettings.outdoorTimeSlots}
-              />
+              <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm max-w-4xl mx-auto">
+                <div>
+                  <h3 className="font-bold text-gray-900">Direct Booking Hub</h3>
+                  <p className="text-sm text-gray-500">Create new manual bookings or track existing ones.</p>
+                </div>
+                <button 
+                  onClick={() => setShowDirectBookingHistory(!showDirectBookingHistory)}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 font-semibold rounded-lg border border-indigo-200 hover:bg-indigo-100 transition-colors"
+                >
+                  <Icon name={showDirectBookingHistory ? "PlusCircleIcon" : "ClockIcon"} size={18} />
+                  {showDirectBookingHistory ? "Create New Booking" : "View History"}
+                </button>
+              </div>
+
+              {showDirectBookingHistory ? (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 max-w-4xl mx-auto">
+                   <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                     <Icon name="ClockIcon" size={24} className="text-indigo-600" />
+                     Direct Bookings History
+                   </h2>
+                   {directBookingsHistory.length === 0 ? (
+                     <div className="text-center text-gray-500 py-10 bg-gray-50 rounded-xl border border-gray-200">No direct bookings found.</div>
+                   ) : (
+                     <div className="space-y-3">
+                       {directBookingsHistory.map(booking => (
+                         <div key={booking.id} onClick={() => setSelectedBooking(booking)} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 hover:bg-indigo-50 border border-gray-200 hover:border-indigo-200 rounded-xl cursor-pointer transition-colors group gap-4">
+                           <div>
+                             <div className="font-bold text-gray-900 flex items-center gap-2">
+                               {booking.name} 
+                               <span className="text-xs px-2 py-0.5 rounded-md font-semibold bg-gray-200 text-gray-700">#{booking.id.slice(-6).toUpperCase()}</span>
+                             </div>
+                             <div className="text-sm text-gray-500 flex items-center gap-4 mt-1">
+                               <span className="flex items-center gap-1"><Icon name="CalendarDaysIcon" size={14} /> {booking.date}</span>
+                               <span className="flex items-center gap-1"><Icon name="MapPinIcon" size={14} /> {booking.eventType}</span>
+                             </div>
+                           </div>
+                           <div className="flex items-center gap-3">
+                             <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                               booking.status === 'completed' ? 'bg-emerald-100 text-emerald-800' :
+                               booking.depositPaid ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800'
+                             }`}>
+                               {booking.status === 'completed' ? 'Completed' : booking.depositPaid ? 'Deposit Paid' : 'Pending Deposit'}
+                             </div>
+                             <Icon name="ChevronRightIcon" size={20} className="text-gray-400 group-hover:text-indigo-600 transition-colors" />
+                           </div>
+                         </div>
+                       ))}
+                     </div>
+                   )}
+                </div>
+              ) : (
+                <ManualBookingForm
+                  setCustomAlert={setCustomAlert}
+                  packages={editableNewPackages}
+                  extras={EXTRAS}
+                  menuCategories={editableMenuCategories}
+                  onBookingCreated={(newBooking) => setCustomAlert({ message: `Booking #${newBooking.id.slice(-6).toUpperCase()} has been successfully created.`, type: 'success' })}
+                  depositPercentage={pricingDetails.depositPercentage}
+                  timeSlots={formSettings.timeSlots}
+                  partyHallTimeSlots={formSettings.partyHallTimeSlots}
+                  outdoorTimeSlots={formSettings.outdoorTimeSlots}
+                  downloadMenuPDF={downloadMenuSelectionPDF}
+                  downloadInvoicePDF={downloadInvoicePDF}
+                />
+              )}
             </div>
           )}
 
@@ -3537,7 +3630,50 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl border border-gray-200 p-5">
+                <div className="bg-white rounded-xl border border-gray-200 p-5 mt-6">
+                  <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <Icon name="EnvelopeIcon" size={18} style={{ color: '#ED1C24' }} />
+                    Email Notification Settings
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-900">Receive Emails</label>
+                        <p className="text-xs text-gray-500">Toggle whether you want to receive emails for new bookings.</p>
+                      </div>
+                      <button
+                        onClick={() => setNotificationSettings({ ...notificationSettings, enabled: !notificationSettings.enabled })}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${notificationSettings.enabled ? 'bg-emerald-500' : 'bg-gray-300'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${notificationSettings.enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                      </button>
+                    </div>
+
+                    {notificationSettings.enabled && (
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Recipient Emails</label>
+                        <textarea
+                          value={notificationSettings.emails}
+                          onChange={(e) => setNotificationSettings({ ...notificationSettings, emails: e.target.value })}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none bg-gray-50 min-h-[80px]"
+                          placeholder="Comma-separated emails..."
+                        />
+                        <p className="text-[10px] text-gray-400 mt-1">Separate multiple email addresses with a comma.</p>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={saveNotificationSettings}
+                      disabled={isSavingNotificationSettings}
+                      className="text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-all mt-2 shadow-md active:scale-95 disabled:opacity-50 w-full"
+                      style={{ background: 'linear-gradient(135deg, #ED1C24, #F5A623)' }}
+                    >
+                      {isSavingNotificationSettings ? 'Saving...' : 'Save Notification Settings'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl border border-gray-200 p-5 mt-6">
                   <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <Icon name="NoSymbolIcon" size={18} style={{ color: '#ED1C24' }} />
                     Block Dates
@@ -3962,9 +4098,35 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
       {selectedBooking && (
         <div className="fixed inset-0 z-50 flex">
           <div className="flex-1 bg-black/40 backdrop-blur-sm" onClick={() => { setSelectedBooking(null); setShowMenuPanel(false); setIsEditingBookingDate(false); setIsEditingEventType(false); setIsEditingPackage(false); setIsEditingTime(false); setIsEditingGuests(false); }} />
-          <div className="w-full max-w-lg bg-white shadow-2xl flex flex-col overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 flex-shrink-0">
+          <div className={`w-full ${isDirectBooking(selectedBooking) ? 'max-w-4xl' : 'max-w-lg'} bg-white shadow-2xl flex flex-col overflow-hidden`}>
+            {isDirectBooking(selectedBooking) ? (
+              <div className="flex-1 overflow-auto relative bg-gray-50 p-2 md:p-6">
+                <button onClick={() => { setSelectedBooking(null); setShowMenuPanel(false); setIsEditingBookingDate(false); setIsEditingEventType(false); setIsEditingPackage(false); setIsEditingTime(false); setIsEditingGuests(false); }} className="absolute top-4 right-4 p-2 bg-gray-200 hover:bg-gray-300 rounded-full text-gray-700 transition-colors z-10">
+                  <Icon name="XMarkIcon" size={20} />
+                </button>
+                <ManualBookingForm
+                  initialData={selectedBooking}
+                  setCustomAlert={setCustomAlert}
+                  packages={editableNewPackages}
+                  extras={EXTRAS}
+                  menuCategories={editableMenuCategories}
+                  depositPercentage={pricingDetails.depositPercentage}
+                  timeSlots={formSettings.timeSlots}
+                  partyHallTimeSlots={formSettings.partyHallTimeSlots}
+                  outdoorTimeSlots={formSettings.outdoorTimeSlots}
+                  downloadMenuPDF={downloadMenuSelectionPDF}
+                  downloadInvoicePDF={downloadInvoicePDF}
+                  onClose={() => { setSelectedBooking(null); setShowMenuPanel(false); setIsEditingBookingDate(false); setIsEditingEventType(false); setIsEditingPackage(false); setIsEditingTime(false); setIsEditingGuests(false); }}
+                  onUpdate={(updatedBooking) => {
+                    setBookings(prev => prev.map(b => b.id === updatedBooking.id ? updatedBooking : b));
+                    setSelectedBooking(updatedBooking);
+                  }}
+                />
+              </div>
+            ) : (
+              <>
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 flex-shrink-0">
               <div className="flex items-center gap-3">
                 {/* Back Arrow button to go one step back in workflow status */}
                 {STATUS_FLOW.indexOf(selectedBooking.status) > 0 && STATUS_FLOW.indexOf(selectedBooking.status) <= 3 && (
@@ -6045,6 +6207,8 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                 </div>
               )}
             </div>
+            </>
+            )}
           </div>
         </div>
       )}
