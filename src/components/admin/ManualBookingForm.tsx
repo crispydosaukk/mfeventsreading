@@ -588,7 +588,12 @@ export default function ManualBookingForm({ setCustomAlert, packages = [], extra
                      const text = `Dear ${customerName},\n\nThank you for choosing Madras Flavours! We are excited to cater for your upcoming event${eventDate ? ` on ${eventDate}` : ''}.\n\n*Here is your Selected Menu:*${menuText}\n*Payment Summary:*\n- Total Event Amount: £${totalAmount}\n- *Deposit Due Now: £${depositAmount}*\n\nKindly review the menu selection above and proceed with the deposit payment of £${depositAmount} to confirm your booking.\n\nLet us know if you need our bank details for the transfer or if you have any questions.\n\nBest regards,\nMadras Flavours Team`;
                      
                      const encodedText = encodeURIComponent(text);
-                     const phone = form.phone ? form.phone.replace(/\D/g, '') : '';
+                     let phone = (form.phone || '').replace(/\D/g, '');
+                     if (phone.startsWith('0') && phone.length === 11) {
+                       phone = '44' + phone.slice(1);
+                     } else if (phone.startsWith('7') && phone.length === 10) {
+                       phone = '44' + phone;
+                     }
                      window.open(`https://wa.me/${phone}?text=${encodedText}`, '_blank');
                   }} className="w-full flex items-center gap-1.5 text-sm font-semibold px-4 py-3 rounded-xl justify-center text-green-800 bg-green-50 border border-green-300 hover:bg-green-100 shadow-sm transition-colors mb-2">
                     <Icon name="ChatBubbleLeftEllipsisIcon" size={18} />
@@ -831,7 +836,7 @@ export default function ManualBookingForm({ setCustomAlert, packages = [], extra
             <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Number of Guests</label>
-                <input type="number" value={form.guests} onChange={e => setForm({...form, guests: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#ED1C24]" placeholder="100" />
+                <input type="number" min="30" value={form.guests} onChange={e => setForm({...form, guests: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#ED1C24]" placeholder="30" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -870,7 +875,9 @@ export default function ManualBookingForm({ setCustomAlert, packages = [], extra
                 <option value="">Select a package...</option>
                 <optgroup label="── Outdoor Catering Packages ──">
                   {packages.map((pkg, i) => (
-                    <option key={pkg.id || i} value={pkg.name}>{pkg.name}</option>
+                    <option key={pkg.id || i} value={pkg.name}>
+                      {pkg.name} (£{pkg.pricePerPerson}/person)
+                    </option>
                   ))}
                 </optgroup>
                 <optgroup label="── Live Dosa Party ──">
@@ -878,7 +885,9 @@ export default function ManualBookingForm({ setCustomAlert, packages = [], extra
                 </optgroup>
                 <optgroup label="── Extras ──">
                   {extras.filter(extra => extra.name === 'Gazebo Hire (Flat Fee)').map((extra, idx) => (
-                    <option key={`extra-${idx}`} value={extra.name}>{extra.name}</option>
+                    <option key={`extra-${idx}`} value={extra.name}>
+                      {extra.name} (£{extra.price})
+                    </option>
                   ))}
                 </optgroup>
                 <optgroup label="── Custom ──">

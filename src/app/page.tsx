@@ -92,12 +92,12 @@ export default function HomePage() {
     });
   }, []);
 
-  const [minGuests, setMinGuests] = useState(100);
+  const [minGuests, setMinGuests] = useState(30);
   React.useEffect(() => {
     return onSnapshot(doc(db, 'site_data', 'venue_details'), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        setMinGuests(Number(data.minGuests) || 100);
+        setMinGuests(Number(data.minGuests) || 30);
       }
     });
   }, []);
