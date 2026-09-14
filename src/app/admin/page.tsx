@@ -2337,12 +2337,11 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
     printWindow.document.close();
   };
 
-  const isDirectBooking = (b: any) => b.source === 'direct_booking' || b.paymentMethodDeposit !== undefined;
+  const isDirectBooking = (b: any) => Boolean(b && b.source === 'direct_booking');
 
-  const enquiries = bookings.filter(b => b.status === 'new_enquiry' && !isDirectBooking(b));
-  const activeBookings = bookings.filter(b => b.status !== 'new_enquiry' && b.status !== 'completed' && !isDirectBooking(b));
-  const HISTORY_STATUSES = ['deposit_confirmed', 'event_scheduled', 'final_invoice_sent', 'final_payment_received', 'event_completed', 'completed'];
-  const completedBookings = bookings.filter(b => HISTORY_STATUSES.includes(b.status) && !isDirectBooking(b)).sort((a, b) => {
+  const enquiries = bookings.filter(b => b.status === 'new_enquiry');
+  const activeBookings = bookings.filter(b => b.status !== 'new_enquiry' && b.status !== 'completed');
+  const completedBookings = bookings.filter(b => b.status === 'completed' || b.status === 'event_completed').sort((a, b) => {
     const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : new Date(a.date).getTime());
     const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : new Date(b.date).getTime());
     return bTime - aTime;
