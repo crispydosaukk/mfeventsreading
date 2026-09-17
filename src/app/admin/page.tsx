@@ -6,6 +6,7 @@ import { NEW_PACKAGES, MENU_CATEGORIES, LIVE_DOSA_PARTY_MENU, EXTRAS, TABLE_SERV
 import AccessControl from '@/components/admin/AccessControl';
 import MenusTabUI from '@/components/admin/MenusTabUI';
 import ManualBookingForm from '@/components/admin/ManualBookingForm';
+import WebsiteContentUI from '@/components/admin/WebsiteContentUI';
 
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, db, storage } from '@/lib/firebase';
@@ -325,7 +326,7 @@ function buildWhatsAppLink(phone: string, message: string) {
   return `https://wa.me/${cleaned}?text=${encodeURIComponent(message)}`;
 }
 
-type AdminTab = 'overview' | 'enquiries' | 'bookings' | 'calendar' | 'customers' | 'payments' | 'menus' | 'history' | 'settings' | 'access' | 'discount_approvals' | 'tracker' | 'manual_booking';
+type AdminTab = 'overview' | 'enquiries' | 'bookings' | 'calendar' | 'customers' | 'payments' | 'menus' | 'history' | 'settings' | 'access' | 'discount_approvals' | 'tracker' | 'manual_booking' | 'content';
 
 // ─── COMPONENT ────────────────────────────────────────────────────────────────
 
@@ -451,6 +452,7 @@ export default function AdminPage() {
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [loginError, setLoginError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   const [userPermissions, setUserPermissions] = useState<string[] | 'all'>('all');
   const [currentUser, setCurrentUser] = useState<{ name: string; email: string; role: string } | null>(null);
@@ -2696,6 +2698,7 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
     { id: 'history', label: 'History', icon: 'ArchiveBoxIcon', requiredPerm: 'manage_history' },
     { id: 'discount_approvals', label: 'Discount Approvals', icon: 'TagIcon', badge: pendingDiscounts.length || undefined, requiredPerm: 'manage_discounts' },
     { id: 'settings', label: 'Settings', icon: 'Cog6ToothIcon', requiredPerm: 'manage_settings' },
+    { id: 'content', label: 'Website Content', icon: 'DocumentTextIcon', requiredPerm: 'manage_settings' },
     { id: 'access', label: 'Access Control', icon: 'ShieldCheckIcon', requiredPerm: 'manage_access' },
     { id: 'tracker', label: 'Booking Tracker', icon: 'MapIcon', requiredPerm: 'manage_tracker' },
   ];
@@ -2709,8 +2712,14 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
   // ─── AUTHENTICATION LOADING ────────────────────────────────────────────────
   if (loadingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1A0F00 0%, #2C1A00 50%, #3D2800 100%)' }}>
-        <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#ED1C24] border-t-transparent" />
+      <div className="min-h-screen font-dashboard flex flex-col items-center justify-center gap-4" style={{ background: 'radial-gradient(ellipse at top, #1A1208 0%, #0B0704 100%)' }}>
+        <div className="relative">
+          <div className="animate-spin rounded-full h-12 w-12 border-3 border-amber-400/20 border-t-amber-400" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="w-3 h-3 rounded-full bg-amber-400 animate-pulse"></span>
+          </div>
+        </div>
+        <div className="text-xs font-semibold uppercase tracking-widest text-amber-200/80">Loading Admin Portal...</div>
       </div>
     );
   }
@@ -2718,69 +2727,158 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
   // ─── LOGIN ────────────────────────────────────────────────────────────────
   if (!loggedIn) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6" style={{ background: 'linear-gradient(135deg, #1A0F00 0%, #2C1A00 50%, #3D2800 100%)' }}>
+      <div className="min-h-screen font-dashboard flex items-center justify-center px-6 relative overflow-hidden" style={{ background: 'radial-gradient(ellipse at top, #1C1208 0%, #0B0704 100%)' }}>
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-20 w-64 h-64 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #F5A623, transparent)' }} />
-          <div className="absolute bottom-20 right-20 w-80 h-80 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #ED1C24, transparent)' }} />
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-red-600/10 blur-3xl" />
         </div>
-        <div className="relative bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm">
-          <div className="flex flex-col items-center mb-6">
-            <img
-              src="/assets/images/logomf.png"
-              alt="Madras Flavours Events logo"
-              style={{ maxHeight: '90px', width: 'auto', objectFit: 'contain' }}
-              className="mb-1"
-            />
-            <p className="text-sm text-gray-400 mt-1">Admin Portal</p>
+        <div className="relative glass-card-gold rounded-3xl shadow-2xl p-8 sm:p-10 w-full max-w-md border border-amber-500/30 backdrop-blur-2xl">
+          <div className="flex flex-col items-center mb-7">
+            <div className="p-3 rounded-2xl bg-white/5 border border-white/10 mb-3 shadow-inner">
+              <img
+                src="/assets/images/logomf.png"
+                alt="Madras Flavours Events logo"
+                style={{ maxHeight: '72px', width: 'auto', objectFit: 'contain' }}
+              />
+            </div>
+            <div className="text-center">
+              <h2 className="text-lg font-bold text-white tracking-tight">Executive Management Portal</h2>
+              <p className="text-xs text-amber-200/70 mt-0.5">Madras Flavours Events Reading</p>
+            </div>
           </div>
-          <div className="border-t border-gray-100 mb-6" />
+
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Email Address</label>
-              <input type="email" required value={loginForm.email} onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })} className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none bg-gray-50" placeholder="rahulbadugu22@gmail.com" />
+              <label className="block text-xs font-semibold text-amber-200/90 uppercase tracking-wider mb-1.5">Email Address</label>
+              <input
+                type="email"
+                required
+                value={loginForm.email}
+                onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all"
+                placeholder="rahulbadugu22@gmail.com"
+              />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Password</label>
+              <label className="block text-xs font-semibold text-amber-200/90 uppercase tracking-wider mb-1.5">Password</label>
               <div className="relative">
-                <input type={showPassword ? "text" : "password"} required value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} className="w-full border border-gray-200 rounded-xl pl-4 pr-10 py-2.5 text-sm focus:outline-none bg-gray-50" placeholder="••••••••" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={loginForm.password}
+                  onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                  className="w-full bg-white/5 border border-white/15 rounded-xl pl-4 pr-10 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all"
+                  placeholder="????????"
+                />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-amber-400 focus:outline-none"
                 >
-                  <Icon name={showPassword ? 'EyeSlashIcon' : 'EyeIcon'} size={20} />
+                  <Icon name={showPassword ? 'EyeSlashIcon' : 'EyeIcon'} size={18} />
                 </button>
               </div>
             </div>
-            {loginError && <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-red-600 text-xs">{loginError}</div>}
-            <button type="submit" disabled={isLoggingIn} className="w-full text-white font-semibold py-2.5 rounded-xl transition-all text-sm shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed" style={{ background: 'linear-gradient(135deg, #ED1C24, #F5A623)' }}>
-              {isLoggingIn ? 'Signing In...' : 'Sign In to Dashboard'}
+
+            {loginError && (
+              <div className="bg-red-950/60 border border-red-500/40 rounded-xl px-3.5 py-2.5 text-red-200 text-xs flex items-center gap-2">
+                <Icon name="ExclamationTriangleIcon" size={16} />
+                <span>{loginError}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoggingIn}
+              className="w-full text-white font-bold py-3 rounded-xl transition-all text-sm shadow-xl hover:shadow-amber-500/25 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+              style={{ background: 'linear-gradient(135deg, #ED1C24 0%, #F5A623 100%)' }}
+            >
+              {isLoggingIn ? (
+                <span className="flex items-center gap-2">
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                  Authenticating...
+                </span>
+              ) : (
+                <>
+                  <span>Sign In to Dashboard</span>
+                  <Icon name="ArrowRightIcon" size={15} />
+                </>
+              )}
             </button>
-            <div className="text-center mt-4 text-xs text-gray-500 bg-gray-50 py-2 rounded-lg border border-gray-100">
-              Please log in with your dashboard credentials.
-            </div>
           </form>
+
+          <div className="text-center mt-6 pt-5 border-t border-white/10 text-xs text-gray-400 flex items-center justify-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span>Secure Role-Based Staff Access</span>
+          </div>
         </div>
       </div>
     );
   }
 
-  // ─── DASHBOARD ────────────────────────────────────────────────────────────
+  // ??? DASHBOARD ????????????????????????????????????????????????????????????
   return (
-    <div className="h-screen bg-gray-50 flex overflow-hidden">
+        <div className="h-screen font-dashboard bg-[#F8FAFC] flex overflow-hidden selection:bg-amber-500/20 selection:text-amber-900 relative">
+      {/* Sign Out Confirmation Modal (Centered in screen) */}
+      {showSignOutConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 max-w-md w-full p-6 sm:p-8 text-center space-y-5 animate-in zoom-in-95 duration-200 relative">
+            <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mx-auto text-red-600 shadow-sm">
+              <Icon name="ArrowRightOnRectangleIcon" size={30} />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-gray-900 tracking-tight">
+                Confirm Sign Out
+              </h3>
+              <p className="text-sm text-gray-500 leading-relaxed max-w-xs mx-auto">
+                Are you sure you want to sign out of the Admin Portal?
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowSignOutConfirm(false)}
+                className="flex-1 py-3 px-4 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  setShowSignOutConfirm(false);
+                  try {
+                    await signOut(auth);
+                    setActiveTab('overview');
+                    if (typeof window !== 'undefined') {
+                      localStorage.removeItem('adminActiveTab');
+                      localStorage.removeItem('adminBypass');
+                    }
+                    setLoggedIn(false);
+                  } catch (error) {
+                    console.error("Error signing out:", error);
+                  }
+                }}
+                className="flex-1 py-3 px-4 rounded-xl text-white text-sm font-semibold shadow-lg hover:shadow-red-500/25 hover:scale-[1.01] active:scale-[0.99] transition-all"
+                style={{ background: 'linear-gradient(135deg, #ED1C24 0%, #F5A623 100%)' }}
+              >
+                Yes, Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />}
 
       {/* Sidebar */}
-      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-60 flex-shrink-0 flex flex-col transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`} style={{ background: 'linear-gradient(180deg, #1A0F00 0%, #2C1A00 100%)' }}>
-        <div className="px-5 py-4 border-b flex items-center gap-2.5" style={{ borderColor: '#3D2800' }}>
-          <div>
-            <img
-              src="/assets/images/logomf.png"
-              alt="Madras Flavours Events logo"
-              style={{ maxHeight: '60px', width: 'auto', objectFit: 'contain' }}
-            />
-            <div className="text-xs mt-1" style={{ color: '#A08060' }}>Admin Dashboard</div>
-          </div>
+      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 flex-shrink-0 flex flex-col transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`} style={{ background: 'linear-gradient(180deg, #090E17 0%, #0F172A 100%)', borderRight: '1px solid rgba(255, 255, 255, 0.08)' }}>
+        <div className="px-5 py-4 border-b border-white/10 flex items-center">
+          <img
+            src="/assets/images/logomf.png"
+            alt="Madras Flavours Events logo"
+            style={{ maxHeight: '52px', width: 'auto', objectFit: 'contain' }}
+          />
         </div>
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {visibleNavItems.map((item) => (
@@ -2804,21 +2902,9 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
             </div>
           </div>
           <button
-            onClick={async () => {
-              try {
-                await signOut(auth);
-                setActiveTab('overview');
-                if (typeof window !== 'undefined') {
-                  localStorage.removeItem('adminActiveTab');
-                  localStorage.removeItem('adminBypass');
-                }
-                setLoggedIn(false);
-              } catch (error) {
-                console.error("Error signing out:", error);
-              }
-            }}
+            onClick={() => setShowSignOutConfirm(true)}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors hover:text-white"
-            style={{ color: '#A08060' }}
+            style={{ color: '#8FAFA0' }}
           >
             <Icon name="ArrowRightOnRectangleIcon" size={17} />
             Sign Out
@@ -2846,6 +2932,7 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                 {activeTab === 'menus' && 'Manage catering packages'}
                 {activeTab === 'history' && `${completedBookings.length} completed bookings`}
                 {activeTab === 'settings' && 'Venue configuration'}
+                {activeTab === 'content' && 'Edit hero section, tags & FAQs'}
                 {activeTab === 'access' && 'Manage roles and permissions'}
                 {activeTab === 'discount_approvals' && 'Review discount requests'}
                 {activeTab === 'tracker' && 'Track booking progress step-by-step'}
