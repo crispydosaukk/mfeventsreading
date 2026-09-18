@@ -684,7 +684,7 @@ export default function HomePage() {
                     <div className="w-full h-px bg-gray-200 my-4" />
 
                     <ul className="space-y-2.5 mb-6">
-                      {pkg.items.map((item: string, i: number) => (
+                      {(Array.isArray(pkg.items) ? pkg.items : typeof pkg.items === 'string' ? (pkg.items as string).split('\n').filter(Boolean) : []).map((item: string, i: number) => (
                         <li key={i} className="text-sm text-gray-800 flex items-start gap-2.5 font-medium">
                           <span className="text-emerald-600 font-bold text-sm leading-none mt-1">✓</span>
                           <span>{item}</span>
