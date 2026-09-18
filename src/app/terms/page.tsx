@@ -4,11 +4,11 @@ import Footer from '@/components/Footer';
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-[#F2EDE3] text-[#1A120B] flex flex-col">
       <Header />
       
-      <main className="flex-1 py-12 px-6 max-w-4xl mx-auto w-full">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 md:p-12">
+      <main className="flex-1 py-16 px-6 max-w-4xl mx-auto w-full">
+        <div className="bg-white rounded-3xl shadow-sm border border-amber-200/80 p-8 md:p-12">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Terms & Conditions</h1>
           
           <div className="space-y-6 text-gray-700 leading-relaxed">

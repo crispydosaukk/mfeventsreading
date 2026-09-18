@@ -299,36 +299,34 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070402] text-gray-100 overflow-x-hidden selection:bg-amber-500/30 selection:text-amber-200">
+    <div className="min-h-screen bg-[#F2EDE3] text-[#1A120B] overflow-x-hidden selection:bg-amber-500/30 selection:text-amber-900">
       <Header onOpenModal={() => {}} />
 
-      {/* ─── HERO WITH ATMOSPHERIC BACKGROUND ─── */}
-      <section className="relative pt-28 pb-16 px-6 min-h-[92vh] flex items-center justify-center overflow-hidden">
-        {/* Multilayered warm luxury gradient overlay */}
-        <div className="absolute inset-0 z-0 bg-gradient-to-r from-black/95 via-[#140A04]/90 to-black/95" />
-        <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#090503] via-transparent to-black/70" />
-        <div className="absolute top-10 right-1/4 w-96 h-96 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-10 left-10 w-96 h-96 rounded-full bg-red-600/10 blur-3xl pointer-events-none" />
+      {/* ─── HERO WITH WARM HERITAGE SANDSTONE BACKGROUND (#F2EDE3) ─── */}
+      <section className="relative pt-32 pb-20 px-6 min-h-[90vh] flex items-center justify-center overflow-hidden bg-[#F2EDE3]">
+        {/* Subtle warm ambient glows */}
+        <div className="absolute top-10 right-1/4 w-96 h-96 rounded-full bg-amber-400/15 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 left-10 w-96 h-96 rounded-full bg-red-400/10 blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-7xl mx-auto w-full flex flex-col lg:flex-row items-center gap-12 lg:gap-16 py-6">
 
           {/* ── Left Column: Compelling Narrative ── */}
           <div className="flex-1 text-center lg:text-left space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-amber-500/30 bg-amber-950/40 backdrop-blur-md shadow-lg shadow-amber-950/30">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-              <span className="text-xs font-bold uppercase tracking-widest text-amber-300">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-amber-300 bg-amber-100/90 shadow-xs">
+              <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse"></span>
+              <span className="text-xs font-bold uppercase tracking-widest text-amber-950">
                 {heroContent.badgeText}
               </span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.12]">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.12]">
               {heroContent.titleLine1} <br className="hidden sm:inline" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-red-500 font-display">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-amber-600 to-amber-700 font-display">
                 {heroContent.titleHighlight}
               </span>
             </h1>
 
-            <p className="text-base sm:text-lg text-gray-300 max-w-2xl lg:mx-0 mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg text-gray-700 max-w-2xl lg:mx-0 mx-auto leading-relaxed font-medium">
               {heroContent.subtitle}
             </p>
 
@@ -337,9 +335,9 @@ export default function HomePage() {
               {heroContent.tags.map((tag, idx) => (
                 <span
                   key={idx}
-                  className="px-3.5 py-1.5 rounded-xl text-xs font-medium bg-white/5 border border-white/10 text-gray-300 backdrop-blur-md flex items-center gap-1.5"
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-white/90 border border-amber-200/80 text-gray-800 shadow-2xs flex items-center gap-1.5"
                 >
-                  <span className="text-amber-400">{tag.icon}</span> {tag.text}
+                  <span className="text-amber-600">{tag.icon}</span> {tag.text}
                 </span>
               ))}
             </div>
@@ -348,7 +346,7 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-3">
               <a
                 href="#menus"
-                className="text-white font-semibold px-8 py-3.5 rounded-xl transition-all shadow-xl hover:shadow-amber-500/25 hover:scale-[1.02] flex items-center justify-center gap-2 cursor-pointer"
+                className="text-white font-semibold px-8 py-3.5 rounded-xl transition-all shadow-md hover:shadow-amber-500/25 hover:scale-[1.02] flex items-center justify-center gap-2 cursor-pointer"
                 style={{ background: 'linear-gradient(135deg, #ED1C24 0%, #F5A623 100%)' }}
               >
                 <span>{heroContent.primaryBtnText}</span>
@@ -356,7 +354,7 @@ export default function HomePage() {
               </a>
               <a
                 href="#book"
-                className="bg-white/5 border border-white/15 text-gray-200 hover:text-white font-semibold px-8 py-3.5 rounded-xl transition-all hover:border-amber-400/50 flex items-center justify-center gap-2 cursor-pointer"
+                className="bg-white border border-gray-300 text-gray-900 hover:border-amber-500 font-semibold px-8 py-3.5 rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>{heroContent.secondaryBtnText}</span>
                 <Icon name="CalendarDaysIcon" size={16} />
@@ -366,14 +364,14 @@ export default function HomePage() {
 
           {/* ── Right Column: High-Visibility Booking Form ── */}
           <div id="book" className="w-full lg:w-[490px] flex-shrink-0">
-            <div className="bg-[#18110B]/95 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden backdrop-blur-2xl border border-amber-500/30">
-              <div className="absolute -top-16 -right-16 w-40 h-40 bg-amber-500/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden border border-amber-200/90">
+              <div className="absolute -top-16 -right-16 w-40 h-40 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
 
               <div className="relative z-10 text-center mb-6">
-                <h2 className="text-2xl font-bold text-white tracking-tight flex items-center justify-center gap-2">
+                <h2 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center justify-center gap-2">
                   <span>Request an Event Booking</span>
                 </h2>
-                <p className="text-xs text-amber-200/80 mt-1">
+                <p className="text-xs text-gray-600 mt-1 font-medium">
                   Fill in your details below for Madras Flavours Events Reading.
                 </p>
               </div>
@@ -407,7 +405,7 @@ export default function HomePage() {
                   {/* Name & Phone */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-semibold text-amber-200/90 mb-1">Your Name *</label>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">Your Name *</label>
                       <input
                         type="text"
                         required
@@ -418,7 +416,7 @@ export default function HomePage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-amber-200/90 mb-1">UK Phone *</label>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">UK Phone *</label>
                       <input
                         type="tel"
                         required
@@ -434,7 +432,7 @@ export default function HomePage() {
                   {/* Email & Event Type */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-semibold text-amber-200/90 mb-1">Email Address *</label>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">Email Address *</label>
                       <input
                         type="email"
                         required
@@ -445,7 +443,7 @@ export default function HomePage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-amber-200/90 mb-1">Event Type *</label>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">Event Type *</label>
                       <select
                         required
                         value={bookingForm.eventType}
@@ -460,7 +458,7 @@ export default function HomePage() {
 
                   {/* Service Format */}
                   <div>
-                    <label className="block text-xs font-semibold text-amber-200/90 mb-1">Service Format *</label>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Service Format *</label>
                     <select
                       required
                       value={bookingForm.serviceType}
@@ -476,7 +474,7 @@ export default function HomePage() {
                   {/* Address & Postcode */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-semibold text-amber-200/90 mb-1">Event Address *</label>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">Event Address *</label>
                       <input
                         type="text"
                         required
@@ -487,7 +485,7 @@ export default function HomePage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-amber-200/90 mb-1">Event Postcode *</label>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">Event Postcode *</label>
                       <input
                         type="text"
                         required
@@ -501,7 +499,7 @@ export default function HomePage() {
 
                   {/* Preferred Package */}
                   <div>
-                    <label className="block text-xs font-semibold text-amber-200/90 mb-1 flex items-center justify-between">
+                    <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center justify-between">
                       <span>Preferred Catering Package</span>
                       {bookingForm.selectedPackage && (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -531,7 +529,7 @@ export default function HomePage() {
                   {/* Date, Time & Guest Count */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <div>
-                      <label className="block text-xs font-semibold text-amber-200/90 mb-1">Date *</label>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">Date *</label>
                       <input
                         type="date"
                         required
@@ -545,7 +543,7 @@ export default function HomePage() {
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-amber-200/90 mb-1">Time Slot *</label>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">Time Slot *</label>
                       <select
                         required
                         value={bookingForm.timeOfDay}
@@ -559,7 +557,7 @@ export default function HomePage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-semibold text-amber-200/90 mb-1">Guests * (Min {minGuests})</label>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">Guests * (Min {minGuests})</label>
                       <input
                         type="number"
                         required
@@ -575,7 +573,7 @@ export default function HomePage() {
 
                   {/* Notes */}
                   <div>
-                    <label className="block text-xs font-semibold text-amber-200/90 mb-1">Special Preferences / Dietary Notes</label>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Special Preferences / Dietary Notes</label>
                     <textarea
                       rows={2}
                       value={bookingForm.message}
@@ -613,7 +611,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── HIGHLIGHT METRICS STRIP ─── */}
-      <section className="relative z-20 py-8 px-6 border-y border-white/10 bg-[#0E0805]">
+      <section className="relative z-20 py-8 px-6 border-y border-amber-900/10 bg-[#E8E1D5]">
         <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
             { value: '500+', label: 'Celebrations Hosted' },
@@ -621,9 +619,9 @@ export default function HomePage() {
             { value: '4.9 ★', label: 'Average Client Rating' },
             { value: '100%', label: 'Pure Veg Fresh Preparation' },
           ].map((stat) => (
-            <div key={stat.label} className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
-              <div className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-red-500">{stat.value}</div>
-              <div className="text-xs text-gray-400 font-medium mt-1">{stat.label}</div>
+            <div key={stat.label} className="p-4 rounded-2xl bg-white/90 border border-amber-200/70 shadow-xs">
+              <div className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-amber-600 to-amber-700">{stat.value}</div>
+              <div className="text-xs text-gray-800 font-bold mt-1">{stat.label}</div>
             </div>
           ))}
         </div>
@@ -631,14 +629,14 @@ export default function HomePage() {
 
 
       {/* ─── MENUS & PACKAGES SHOWCASE ─── */}
-      <section id="menus" className="py-20 px-6 bg-[#070402] border-t border-white/10">
+      <section id="menus" className="py-20 px-6 bg-[#F2EDE3] border-t border-amber-900/10">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
-            <span className="text-xs font-bold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-4 py-1.5 rounded-full border border-amber-500/20">
+            <span className="text-xs font-bold uppercase tracking-widest text-amber-900 bg-amber-100 px-4 py-1.5 rounded-full border border-amber-300">
               Transparent Pricing &amp; Menus
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">Our Catering Packages</h2>
-            <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900">Our Catering Packages</h2>
+            <p className="text-gray-700 text-sm sm:text-base leading-relaxed font-medium">
               Every package is designed to delight your guests with genuine South Indian gourmet flavours. Select any package to pre-fill your booking enquiry.
             </p>
           </div>
@@ -653,7 +651,7 @@ export default function HomePage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveMenuTab(tab.id)}
-                className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer ${activeMenuTab === tab.id ? 'text-white shadow-xl shadow-amber-950/40 scale-105' : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:border-white/20'}`}
+                className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer ${activeMenuTab === tab.id ? 'text-white shadow-lg scale-105' : 'bg-white border border-amber-200 text-gray-700 hover:text-gray-950 hover:border-amber-400 shadow-xs'}`}
                 style={activeMenuTab === tab.id ? { background: 'linear-gradient(135deg, #ED1C24 0%, #F5A623 100%)' } : {}}
               >
                 <span>{tab.label}</span>
@@ -667,7 +665,7 @@ export default function HomePage() {
               {NEW_PACKAGES.map((pkg: any) => (
                 <div
                   key={pkg.id}
-                  className="bg-[#140D08] border border-white/10 rounded-3xl p-7 flex flex-col justify-between hover:border-amber-400/50 hover:-translate-y-1 transition-all duration-300 relative group shadow-xl"
+                  className="bg-white border border-amber-200/80 rounded-3xl p-7 flex flex-col justify-between hover:border-amber-400 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 relative group shadow-md text-gray-900"
                 >
                   {pkg.tag && (
                     <div className="absolute top-5 right-5 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-red-600/90 text-white shadow-md">
@@ -676,19 +674,19 @@ export default function HomePage() {
                   )}
 
                   <div>
-                    <h3 className="text-2xl font-bold text-white mb-2">{pkg.name}</h3>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{pkg.name}</h3>
                     <div className="flex items-baseline gap-2 mb-4">
                       <span className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-red-500">£{pkg.pricePerPerson}</span>
-                      <span className="text-xs text-gray-400 font-medium">/ person</span>
-                      <span className="text-xs text-amber-300/80 ml-auto font-semibold">{pkg.guestLabel}</span>
+                      <span className="text-xs text-gray-600 font-semibold">/ person</span>
+                      <span className="text-xs text-amber-800 font-bold ml-auto">{pkg.guestLabel}</span>
                     </div>
 
-                    <div className="w-full h-px bg-white/10 my-4" />
+                    <div className="w-full h-px bg-gray-200 my-4" />
 
                     <ul className="space-y-2.5 mb-6">
                       {pkg.items.map((item: string, i: number) => (
-                        <li key={i} className="text-sm text-gray-300 flex items-start gap-2.5">
-                          <span className="text-amber-400 font-bold text-sm leading-none mt-1">✓</span>
+                        <li key={i} className="text-sm text-gray-800 flex items-start gap-2.5 font-medium">
+                          <span className="text-emerald-600 font-bold text-sm leading-none mt-1">✓</span>
                           <span>{item}</span>
                         </li>
                       ))}
@@ -697,7 +695,7 @@ export default function HomePage() {
 
                   <div>
                     {pkg.complimentary && (
-                      <div className="text-xs text-amber-200/80 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 mb-5 leading-relaxed">
+                      <div className="text-xs text-amber-950 bg-amber-50 border border-amber-200 rounded-xl p-3 mb-5 leading-relaxed font-semibold">
                         🎁 <span className="font-semibold">{pkg.complimentary}</span>
                       </div>
                     )}
@@ -720,8 +718,8 @@ export default function HomePage() {
           {activeMenuTab === 'menu' && (
             <div className="space-y-10">
               <div className="text-center max-w-2xl mx-auto">
-                <h3 className="text-xl font-bold text-white mb-2">A La Carte Dish Selection</h3>
-                <p className="text-xs text-gray-400">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">A La Carte Dish Selection</h3>
+                <p className="text-xs text-gray-700 font-medium">
                   Mix and match your course selections from our authentic Tamil &amp; South Indian vegetarian categories.
                 </p>
               </div>
@@ -736,20 +734,20 @@ export default function HomePage() {
                   { title: 'DHAL', items: MENU_CATEGORIES.dhal, icon: '🍲' },
                   { title: 'DESSERT', items: MENU_CATEGORIES.dessert, icon: '🍨' },
                 ].map((category) => (
-                  <div key={category.title} className="bg-[#140D08] rounded-3xl border border-white/10 overflow-hidden shadow-xl hover:border-amber-400/30 transition-colors">
-                    <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-gradient-to-r from-red-950/40 to-amber-950/40">
-                      <h4 className="font-bold text-sm tracking-wider text-amber-300 uppercase flex items-center gap-2">
+                  <div key={category.title} className="bg-white rounded-3xl border border-amber-200 overflow-hidden shadow-md hover:border-amber-400 transition-colors">
+                    <div className="px-6 py-4 border-b border-amber-100 flex items-center justify-between bg-gradient-to-r from-amber-100 to-red-50">
+                      <h4 className="font-bold text-sm tracking-wider text-amber-950 uppercase flex items-center gap-2">
                         <span>{category.icon}</span>
                         <span>{category.title}</span>
                       </h4>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-gray-300">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white border border-amber-200 text-gray-800">
                         {category.items.length} items
                       </span>
                     </div>
                     <ul className="p-5 space-y-2.5 max-h-72 overflow-y-auto">
                       {category.items.map((item: string, idx: number) => (
-                        <li key={idx} className="text-xs text-gray-300 flex items-center gap-2.5 py-1 border-b border-white/5 last:border-0">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80" />
+                        <li key={idx} className="text-xs text-gray-800 font-medium flex items-center gap-2.5 py-1.5 border-b border-gray-100 last:border-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
                           <span>{item}</span>
                         </li>
                       ))}
@@ -763,19 +761,19 @@ export default function HomePage() {
           {/* TAB 3: LIVE DOSA COUNTER */}
           {activeMenuTab === 'live' && (
             <div className="space-y-8 max-w-4xl mx-auto">
-              <div className="bg-[#140D08] rounded-3xl border border-amber-500/30 p-8 shadow-2xl relative overflow-hidden">
+              <div className="bg-white rounded-3xl border-2 border-amber-300 p-8 shadow-xl relative overflow-hidden">
                 <div className="text-center max-w-xl mx-auto mb-8 space-y-3">
                   <span className="inline-block text-xs font-bold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-4 py-1.5 rounded-full border border-amber-500/20">
                     Live Chef Station
                   </span>
-                  <h3 className="text-2xl sm:text-3xl font-extrabold text-white">Outdoor Live Dosa Party Counter</h3>
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-gray-900">Outdoor Live Dosa Party Counter</h3>
                   <div className="flex flex-wrap items-center justify-center gap-4 text-sm font-semibold text-amber-300 pt-1">
                     {LIVE_DOSA_PARTY_MENU.pricing.map((price: string, i: number) => (
-                      <span key={i} className="px-4 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                      <span key={i} className="px-4 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 font-bold">
                         {price}
                       </span>
                     ))}
-                    <span className="px-4 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300">
+                    <span className="px-4 py-1.5 rounded-xl bg-red-50 border border-red-200 text-red-700 font-bold">
                       Gazebo Hire (Flat Fee): £100.00
                     </span>
                   </div>
@@ -783,14 +781,14 @@ export default function HomePage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                   {LIVE_DOSA_PARTY_MENU.items.map((item: string, idx: number) => (
-                    <div key={idx} className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-3">
+                    <div key={idx} className="p-4 rounded-2xl bg-[#F2EDE3]/70 border border-amber-200 flex items-center gap-3">
                       <span className="text-xl">🥞</span>
-                      <span className="text-sm font-semibold text-gray-200">{item}</span>
+                      <span className="text-sm font-bold text-gray-900">{item}</span>
                     </div>
                   ))}
                 </div>
 
-                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center text-xs text-amber-200 font-semibold mb-6">
+                <div className="p-4 rounded-2xl bg-amber-100/90 border border-amber-300 text-center text-xs text-amber-950 font-bold mb-6">
                   ⏱️ MINIMUM 2 HOURS CHEF SERVICE INCLUDED
                 </div>
 
@@ -806,13 +804,13 @@ export default function HomePage() {
               </div>
 
               {/* Extras */}
-              <div className="bg-[#140D08] rounded-3xl border border-white/10 p-7">
-                <h4 className="text-sm font-bold uppercase tracking-wider text-amber-400 mb-4 text-center">
+              <div className="bg-white rounded-3xl border border-amber-200/80 p-7 shadow-md">
+                <h4 className="text-sm font-bold uppercase tracking-wider text-amber-900 mb-4 text-center">
                   Popular Event Add-Ons &amp; Extras
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
                   {EXTRAS.map((extra: any, idx: number) => (
-                    <div key={idx} className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-gray-300">
+                    <div key={idx} className="p-3 rounded-xl bg-[#F2EDE3]/60 border border-amber-200/80 flex items-center justify-between text-gray-900 font-medium">
                       <span className="font-medium">{extra.name}</span>
                       <span className="font-bold text-amber-400">£{Number(extra.price).toFixed(2)}</span>
                     </div>
@@ -826,14 +824,14 @@ export default function HomePage() {
       </section>
 
       {/* ─── FAQ SECTION ─── */}
-      <section id="faqs" className="py-20 px-6 bg-[#0E0805] border-t border-white/10">
+      <section id="faqs" className="py-20 px-6 bg-[#EAE4D8] border-t border-amber-900/10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12 space-y-3">
             <span className="text-xs font-bold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-4 py-1.5 rounded-full border border-amber-500/20">
               Got Questions?
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">Frequently Asked Questions</h2>
-            <p className="text-gray-400 text-sm max-w-xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900">Frequently Asked Questions</h2>
+            <p className="text-gray-700 text-sm max-w-xl mx-auto font-medium">
               Everything you need to know about our outdoor live dosa catering and booking policies in Reading.
             </p>
           </div>
@@ -844,11 +842,11 @@ export default function HomePage() {
               return (
                 <div
                   key={index}
-                  className="rounded-2xl border border-white/10 bg-[#140D08] overflow-hidden transition-all duration-200 hover:border-amber-500/40"
+                  className="rounded-2xl border border-amber-200/80 bg-white overflow-hidden transition-all duration-200 shadow-xs hover:border-amber-400"
                 >
                   <button
                     onClick={() => toggleSection(`faq-${index}`)}
-                    className="w-full px-6 py-5 flex items-center justify-between text-left font-bold text-gray-200 hover:text-amber-400 transition-colors cursor-pointer text-sm sm:text-base"
+                    className="w-full px-6 py-5 flex items-center justify-between text-left font-bold text-gray-900 hover:text-amber-700 transition-colors cursor-pointer text-sm sm:text-base"
                   >
                     <span>{faq.question}</span>
                     <span className={`transform transition-transform duration-200 text-amber-400 flex-shrink-0 ml-4 ${isOpen ? 'rotate-180 text-red-500' : ''}`}>
@@ -860,7 +858,7 @@ export default function HomePage() {
                       isOpen ? 'max-h-96 border-t border-white/10' : 'max-h-0'
                     }`}
                   >
-                    <div className="px-6 py-5 text-sm text-gray-400 leading-relaxed bg-black/20">
+                    <div className="px-6 py-5 text-sm text-gray-700 leading-relaxed bg-amber-50/30 border-t border-amber-100">
                       {faq.answer}
                     </div>
                   </div>
@@ -876,12 +874,12 @@ export default function HomePage() {
       {/* ─── CUSTOM ALERT MODAL ─── */}
       {customHomeAlert && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-          <div className="bg-[#18110B] rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-sm border border-amber-500/30 flex flex-col items-center text-center">
+          <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-sm border border-amber-300 flex flex-col items-center text-center text-gray-900">
             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${customHomeAlert.type === 'success' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
               <Icon name={customHomeAlert.type === 'success' ? 'CheckIcon' : 'ExclamationTriangleIcon'} size={28} />
             </div>
-            <h3 className="text-lg font-bold text-white mb-2">{customHomeAlert.type === 'success' ? 'Success' : 'Notice'}</h3>
-            <p className="text-sm text-gray-300 mb-6 leading-relaxed">{customHomeAlert.message}</p>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">{customHomeAlert.type === 'success' ? 'Success' : 'Notice'}</h3>
+            <p className="text-sm text-gray-700 mb-6 leading-relaxed font-medium">{customHomeAlert.message}</p>
             <button
               onClick={() => setCustomHomeAlert(null)}
               className="px-8 py-2.5 rounded-xl text-sm font-bold text-white transition-all shadow-lg cursor-pointer hover:brightness-110"
