@@ -452,7 +452,6 @@ export default function AdminPage() {
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [loginError, setLoginError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   const [userPermissions, setUserPermissions] = useState<string[] | 'all'>('all');
   const [currentUser, setCurrentUser] = useState<{ name: string; email: string; role: string } | null>(null);
@@ -568,12 +567,12 @@ export default function AdminPage() {
   }, []);
 
   const [venueDetails, setVenueDetails] = useState({
-    venueName: 'Madras Flavours Events',
+    venueName: 'Madras Flavours Events Reading',
     minGuests: '30',
-    contactEmail: 'hello@madrasflavoursevents.com',
-    phone: '+44 7700 900000',
-    whatsapp: '+447700900000',
-    address: '123 Event Plaza, London, UK'
+    contactEmail: 'madrasflavoursreading@gmail.com',
+    phone: '+44 7507 271890',
+    whatsapp: '+447507271890',
+    address: 'Reading, Berkshire, UK'
   });
 
   useEffect(() => {
@@ -581,12 +580,12 @@ export default function AdminPage() {
       if (docSnap.exists()) {
         const data = docSnap.data();
         setVenueDetails({
-          venueName: data.venueName || 'Madras Flavours Events',
+          venueName: data.venueName || 'Madras Flavours Events Reading',
           minGuests: data.minGuests || '30',
-          contactEmail: data.contactEmail || 'hello@madrasflavoursevents.com',
-          phone: data.phone || '+44 7700 900000',
-          whatsapp: data.whatsapp || '+447700900000',
-          address: data.address || '123 Event Plaza, London, UK'
+          contactEmail: data.contactEmail || 'madrasflavoursreading@gmail.com',
+          phone: data.phone || '+44 7507 271890',
+          whatsapp: data.whatsapp || '+447507271890',
+          address: data.address || 'Reading, Berkshire, UK'
         });
       }
     });
@@ -703,7 +702,7 @@ export default function AdminPage() {
 
   const [notificationSettings, setNotificationSettings] = useState({
     enabled: true,
-    emails: 'rahulbadugu22@gmail.com, catering@madrasflavours.co.uk, Digitalbotsolutions@gmail.com'
+    emails: 'rahulbadugu22@gmail.com, madrasflavoursreading@gmail.com, Digitalbotsolutions@gmail.com'
   });
   const [isSavingNotificationSettings, setIsSavingNotificationSettings] = useState(false);
 
@@ -726,15 +725,15 @@ export default function AdminPage() {
         const data = docSnap.data();
         setNotificationSettings({
           enabled: data.enabled !== undefined ? data.enabled : true,
-          emails: data.emails || 'rahulbadugu22@gmail.com, catering@madrasflavours.co.uk, Digitalbotsolutions@gmail.com'
+          emails: data.emails || 'rahulbadugu22@gmail.com, madrasflavoursreading@gmail.com, Digitalbotsolutions@gmail.com'
         });
       }
     });
   }, []);
 
   // ─── REAL MENU EDITABLE STATE ─────────────────────────────────────────────
-  type AdminMenuTab = 'banquet' | 'indian' | 'srilankan' | 'live';
-  const [adminMenuTab, setAdminMenuTab] = useState<AdminMenuTab>('banquet');
+  type AdminMenuTab = 'packages' | 'categories' | 'live' | 'extras' | 'venue';
+  const [adminMenuTab, setAdminMenuTab] = useState<AdminMenuTab>('packages');
 
   // Editable Madras Flavours Menu States
   const [editableNewPackages, setEditableNewPackages] = useState<any[]>(NEW_PACKAGES.map(pkg => ({ ...pkg })));
@@ -799,7 +798,7 @@ export default function AdminPage() {
   };
 
   const buildMenuWhatsAppText = (customerName: string, customerPhone: string, menuType: string, guestCount: number) => {
-    let text = `Hi ${customerName}, here are our *${menuType}* options from Madras Flavours Events:\n\n`;
+    let text = `Hi ${customerName}, here are our *${menuType}* options from Madras Flavours Events Reading:\n\n`;
     if (menuType === 'Packages') {
       text += editableNewPackages.map((p: any) => `• *${p.name}:* £${p.pricePerPerson}\n${(p.items || []).join(', ')}`).join('\n\n') + '\n\n';
     } else if (menuType === 'Menu Categories' || menuType === 'Menu Items') {
@@ -827,7 +826,7 @@ export default function AdminPage() {
   };
 
   const buildStep1EnquiryWhatsAppText = (booking: Booking) => {
-    let text = `Hi ${booking.name.split(' ')[0]}, thank you for your enquiry with Madras Flavours Events for your *${booking.eventType}* on *${booking.date || 'TBD'}*!\n\n`;
+    let text = `Hi ${booking.name.split(' ')[0]}, thank you for your enquiry with Madras Flavours Events Reading for your *${booking.eventType}* on *${booking.date || 'TBD'}*!\n\n`;
     text += `Here are our packages & pricing details:\n\n`;
 
     // 1. Packages
@@ -888,7 +887,7 @@ export default function AdminPage() {
 
     const packageText = `*Menu Selection:*\n• Package: *${booking.selectedMenu || booking.package}*\n${menuItemsText}`;
 
-    return buildWhatsAppLink(booking.phone, `Hi ${booking.name.split(' ')[0]},\n\nThank you for choosing Madras Flavours Events! Here is a summary of your confirmed selections:\n\n*Event Details:*\n• Date: ${booking.date}\n• Event Type: ${booking.eventType}\n\n${packageText}\n*Guests:*\n${guestBreakdown}\n• Total Guests: ${adults + kids4to10 + kidsUnder4}\n${extrasText}\n\n*Pricing Details:*\n• Base Amount: £${booking.baseAmount.toLocaleString()}${discountText}${vatText}\n• Grand Total: *£${grandTotal.toLocaleString()}*\n• Deposit Required: *£${booking.deposit.toLocaleString()}*\n\n${WHATSAPP_TERMS_TEXT}\n\nPlease let us know if this summary is correct. Once you confirm, we will send our bank details for the deposit payment! 🙏`);
+    return buildWhatsAppLink(booking.phone, `Hi ${booking.name.split(' ')[0]},\n\nThank you for choosing Madras Flavours Events Reading! Here is a summary of your confirmed selections:\n\n*Event Details:*\n• Date: ${booking.date}\n• Event Type: ${booking.eventType}\n\n${packageText}\n*Guests:*\n${guestBreakdown}\n• Total Guests: ${adults + kids4to10 + kidsUnder4}\n${extrasText}\n\n*Pricing Details:*\n• Base Amount: £${booking.baseAmount.toLocaleString()}${discountText}${vatText}\n• Grand Total: *£${grandTotal.toLocaleString()}*\n• Deposit Required: *£${booking.deposit.toLocaleString()}*\n\n${WHATSAPP_TERMS_TEXT}\n\nPlease let us know if this summary is correct. Once you confirm, we will send our bank details for the deposit payment! 🙏`);
   };
 
   const buildStep5DepositConfirmedWhatsAppText = (booking: Booking) => {
@@ -900,7 +899,7 @@ export default function AdminPage() {
     const discountText = booking.discount ? `\n• Discount (${booking.discount.reason}): -£${getDiscountAmount(booking).toLocaleString()}` : '';
     const vatText = booking.vatRate === 20 ? `\n• VAT (20%): +£${(getFoodPackageTotal(booking) * 0.2).toLocaleString()}` : '';
 
-    return buildWhatsAppLink(booking.phone, `Hi ${booking.name.split(' ')[0]},\n\nWe have received and verified your deposit of *£${booking.deposit.toLocaleString()}*! Your booking for the *${booking.eventType}* on *${booking.date}* is officially confirmed!\n\n*Payments Summary:*${discountText}${vatText}\n• Grand Total: £${grandTotal.toLocaleString()}\n• Deposit Paid: £${booking.deposit.toLocaleString()}\n• Remaining Balance: *£${(grandTotal - booking.deposit).toLocaleString()}*\n${booking.dueDate ? `• Balance Due Date: ${booking.dueDate}` : ''}\n\nWe will contact you shortly before the due date to finalize the food selections and details. Thank you for choosing Madras Flavours Events! 🙏✨`);
+    return buildWhatsAppLink(booking.phone, `Hi ${booking.name.split(' ')[0]},\n\nWe have received and verified your deposit of *£${booking.deposit.toLocaleString()}*! Your booking for the *${booking.eventType}* on *${booking.date}* is officially confirmed!\n\n*Payments Summary:*${discountText}${vatText}\n• Grand Total: £${grandTotal.toLocaleString()}\n• Deposit Paid: £${booking.deposit.toLocaleString()}\n• Remaining Balance: *£${(grandTotal - booking.deposit).toLocaleString()}*\n${booking.dueDate ? `• Balance Due Date: ${booking.dueDate}` : ''}\n\nWe will contact you shortly before the due date to finalize the food selections and details. Thank you for choosing Madras Flavours Events Reading! 🙏✨`);
   };
 
   const buildStep7FinalPaymentReceivedWhatsAppText = (booking: Booking) => {
@@ -942,7 +941,7 @@ export default function AdminPage() {
 
     return `Hi ${booking.name.split(' ')[0]},
 
-Thank you so much for booking with Madras Flavours Events! Your event was a success and your booking is now fully completed.
+Thank you so much for booking with Madras Flavours Events Reading! Your event was a success and your booking is now fully completed.
 
 *Event Summary:*
 • Event: ${booking.eventType}
@@ -1013,7 +1012,7 @@ It was an absolute pleasure serving you. We hope you and your guests had a wonde
       `• Total Paid: £${totalPaid.toLocaleString()}\n` +
       `• *Remaining Balance Due: ${remainingBalance <= 0 ? 'PAID IN FULL ✓' : `£${remainingBalance.toLocaleString()}`}*`;
 
-    return `Hi ${booking.name.split(' ')[0]}, thank you for choosing Madras Flavours Events for your ${booking.eventType}! 🎉\n\nHere is your final invoice summary:\n\n*Booking Ref:* ${generateDisplayId(booking)}\n*Package:* ${booking.selectedMenu || booking.package}\n\n${guestBreakdown}\n\n*Base Amount:* £${booking.baseAmount.toLocaleString()}${extrasText}${discountText}${vatText}${grandTotalText}\n\n${breakdownText}${dueDateText}\n\nPlease transfer the balance to:\nAccount Name: ${bank.accountName}\nSort Code: ${bank.sortCode}\nAccount No: ${bank.accountNumber}\nReference: ${generateDisplayId(booking)}\n\nOnce paid, please send a screenshot of the transfer confirmation here. Thank you!`;
+    return `Hi ${booking.name.split(' ')[0]}, thank you for choosing Madras Flavours Events Reading for your ${booking.eventType}! 🎉\n\nHere is your final invoice summary:\n\n*Booking Ref:* ${generateDisplayId(booking)}\n*Package:* ${booking.selectedMenu || booking.package}\n\n${guestBreakdown}\n\n*Base Amount:* £${booking.baseAmount.toLocaleString()}${extrasText}${discountText}${vatText}${grandTotalText}\n\n${breakdownText}${dueDateText}\n\nPlease transfer the balance to:\nAccount Name: ${bank.accountName}\nSort Code: ${bank.sortCode}\nAccount No: ${bank.accountNumber}\nReference: ${generateDisplayId(booking)}\n\nOnce paid, please send a screenshot of the transfer confirmation here. Thank you!`;
   };
 
   const buildExtraInvoiceWhatsAppText = (booking: Booking, bank: typeof bankDetails) => {
@@ -1023,7 +1022,7 @@ It was an absolute pleasure serving you. We hope you and your guests had a wonde
 
     return `Hi ${booking.name.split(' ')[0]},
 
-Thank you for celebrating with us at Madras Flavours Events! 🎉 We hope you had a fantastic time.
+Thank you for celebrating with us at Madras Flavours Events Reading! 🎉 We hope you had a fantastic time.
 
 There were some additional adjustments/services added during your event:
 ${extrasList}
@@ -2020,7 +2019,7 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
             <p>Booking Reference: <strong>#${generateDisplayId(booking)}</strong></p>
             <p>Enquiry Date: ${formattedEnquiryDate}</p>
           </div>
-          <img class="logo" src="${logoUrl}" alt="Madras Flavours Events Logo" />
+          <img class="logo" src="${logoUrl}" alt="Madras Flavours Events Reading Logo" />
         </div>
 
         <div class="grid-2">
@@ -2397,7 +2396,7 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
             <p>Booking Reference: <strong>#${generateDisplayId(booking)}</strong></p>
             <p>Enquiry Date: ${formattedEnquiryDate}</p>
           </div>
-          <img class="logo" src="${logoUrl}" alt="Madras Flavours Events Logo" />
+          <img class="logo" src="${logoUrl}" alt="Madras Flavours Events Reading Logo" />
         </div>
 
         <div class="grid-2">
@@ -2576,7 +2575,7 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
         ${screenshotsHTML}
 
         <div class="footer-note">
-          Thank you for choosing Madras Flavours Events. If you have any questions regarding this invoice, please contact us.
+          Thank you for choosing Madras Flavours Events Reading. If you have any questions regarding this invoice, please contact us.
         </div>
 
         <script>
@@ -2712,14 +2711,8 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
   // ─── AUTHENTICATION LOADING ────────────────────────────────────────────────
   if (loadingAuth) {
     return (
-      <div className="min-h-screen font-dashboard flex flex-col items-center justify-center gap-4" style={{ background: 'radial-gradient(ellipse at top, #1A1208 0%, #0B0704 100%)' }}>
-        <div className="relative">
-          <div className="animate-spin rounded-full h-12 w-12 border-3 border-amber-400/20 border-t-amber-400" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="w-3 h-3 rounded-full bg-amber-400 animate-pulse"></span>
-          </div>
-        </div>
-        <div className="text-xs font-semibold uppercase tracking-widest text-amber-200/80">Loading Admin Portal...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #1A0F00 0%, #2C1A00 50%, #3D2800 100%)' }}>
+        <div className="animate-spin rounded-full h-8 w-8 border-4 border-[#ED1C24] border-t-transparent" />
       </div>
     );
   }
@@ -2727,158 +2720,70 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
   // ─── LOGIN ────────────────────────────────────────────────────────────────
   if (!loggedIn) {
     return (
-      <div className="min-h-screen font-dashboard flex items-center justify-center px-6 relative overflow-hidden" style={{ background: 'radial-gradient(ellipse at top, #1C1208 0%, #0B0704 100%)' }}>
+      <div className="min-h-screen flex items-center justify-center px-6" style={{ background: 'linear-gradient(135deg, #1A0F00 0%, #2C1A00 50%, #3D2800 100%)' }}>
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-amber-500/10 blur-3xl" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-red-600/10 blur-3xl" />
+          <div className="absolute top-20 left-20 w-64 h-64 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #F5A623, transparent)' }} />
+          <div className="absolute bottom-20 right-20 w-80 h-80 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #ED1C24, transparent)' }} />
         </div>
-        <div className="relative glass-card-gold rounded-3xl shadow-2xl p-8 sm:p-10 w-full max-w-md border border-amber-500/30 backdrop-blur-2xl">
-          <div className="flex flex-col items-center mb-7">
-            <div className="p-3 rounded-2xl bg-white/5 border border-white/10 mb-3 shadow-inner">
-              <img
-                src="/assets/images/logomf.png"
-                alt="Madras Flavours Events logo"
-                style={{ maxHeight: '72px', width: 'auto', objectFit: 'contain' }}
-              />
-            </div>
-            <div className="text-center">
-              <h2 className="text-lg font-bold text-white tracking-tight">Executive Management Portal</h2>
-              <p className="text-xs text-amber-200/70 mt-0.5">Madras Flavours Events Reading</p>
-            </div>
+        <div className="relative bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm">
+          <div className="flex flex-col items-center mb-6">
+            <img
+              src="/assets/images/logomf.png"
+              alt="Madras Flavours Events Reading logo"
+              style={{ maxHeight: '72px', width: 'auto', objectFit: 'contain' }}
+              className="mb-1"
+            />
+            <p className="text-sm font-bold text-gray-900 mt-2">Madras Flavours Events Reading</p>
+            <p className="text-xs text-gray-400">Admin Management Portal</p>
           </div>
-
+          <div className="border-t border-gray-100 mb-6" />
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-amber-200/90 uppercase tracking-wider mb-1.5">Email Address</label>
-              <input
-                type="email"
-                required
-                value={loginForm.email}
-                onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all"
-                placeholder="rahulbadugu22@gmail.com"
-              />
+              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Email Address</label>
+              <input type="email" required value={loginForm.email} onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })} className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none bg-white placeholder-gray-400 shadow-sm" placeholder="rahulbadugu22@gmail.com" />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-amber-200/90 uppercase tracking-wider mb-1.5">Password</label>
+              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Password</label>
               <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={loginForm.password}
-                  onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                  className="w-full bg-white/5 border border-white/15 rounded-xl pl-4 pr-10 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all"
-                  placeholder="????????"
-                />
+                <input type={showPassword ? "text" : "password"} required value={loginForm.password} onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })} className="w-full border border-gray-300 rounded-xl pl-4 pr-10 py-2.5 text-sm text-gray-900 focus:outline-none bg-white placeholder-gray-400 shadow-sm" placeholder="••••••••" />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-amber-400 focus:outline-none"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none"
                 >
-                  <Icon name={showPassword ? 'EyeSlashIcon' : 'EyeIcon'} size={18} />
+                  <Icon name={showPassword ? 'EyeSlashIcon' : 'EyeIcon'} size={20} />
                 </button>
               </div>
             </div>
-
-            {loginError && (
-              <div className="bg-red-950/60 border border-red-500/40 rounded-xl px-3.5 py-2.5 text-red-200 text-xs flex items-center gap-2">
-                <Icon name="ExclamationTriangleIcon" size={16} />
-                <span>{loginError}</span>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={isLoggingIn}
-              className="w-full text-white font-bold py-3 rounded-xl transition-all text-sm shadow-xl hover:shadow-amber-500/25 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
-              style={{ background: 'linear-gradient(135deg, #ED1C24 0%, #F5A623 100%)' }}
-            >
-              {isLoggingIn ? (
-                <span className="flex items-center gap-2">
-                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                  Authenticating...
-                </span>
-              ) : (
-                <>
-                  <span>Sign In to Dashboard</span>
-                  <Icon name="ArrowRightIcon" size={15} />
-                </>
-              )}
+            {loginError && <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-red-600 text-xs">{loginError}</div>}
+            <button type="submit" disabled={isLoggingIn} className="w-full text-white font-semibold py-2.5 rounded-xl transition-all text-sm shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed" style={{ background: 'linear-gradient(135deg, #ED1C24, #F5A623)' }}>
+              {isLoggingIn ? 'Signing In...' : 'Sign In to Dashboard'}
             </button>
+            <div className="text-center mt-4 text-xs text-gray-500 bg-gray-50 py-2 rounded-lg border border-gray-100">
+              Please log in with your dashboard credentials.
+            </div>
           </form>
-
-          <div className="text-center mt-6 pt-5 border-t border-white/10 text-xs text-gray-400 flex items-center justify-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span>Secure Role-Based Staff Access</span>
-          </div>
         </div>
       </div>
     );
   }
 
-  // ??? DASHBOARD ????????????????????????????????????????????????????????????
+  // ─── DASHBOARD ────────────────────────────────────────────────────────────
   return (
-        <div className="h-screen font-dashboard bg-[#F8FAFC] flex overflow-hidden selection:bg-amber-500/20 selection:text-amber-900 relative">
-      {/* Sign Out Confirmation Modal (Centered in screen) */}
-      {showSignOutConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 max-w-md w-full p-6 sm:p-8 text-center space-y-5 animate-in zoom-in-95 duration-200 relative">
-            <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mx-auto text-red-600 shadow-sm">
-              <Icon name="ArrowRightOnRectangleIcon" size={30} />
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold text-gray-900 tracking-tight">
-                Confirm Sign Out
-              </h3>
-              <p className="text-sm text-gray-500 leading-relaxed max-w-xs mx-auto">
-                Are you sure you want to sign out of the Admin Portal?
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowSignOutConfirm(false)}
-                className="flex-1 py-3 px-4 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  setShowSignOutConfirm(false);
-                  try {
-                    await signOut(auth);
-                    setActiveTab('overview');
-                    if (typeof window !== 'undefined') {
-                      localStorage.removeItem('adminActiveTab');
-                      localStorage.removeItem('adminBypass');
-                    }
-                    setLoggedIn(false);
-                  } catch (error) {
-                    console.error("Error signing out:", error);
-                  }
-                }}
-                className="flex-1 py-3 px-4 rounded-xl text-white text-sm font-semibold shadow-lg hover:shadow-red-500/25 hover:scale-[1.01] active:scale-[0.99] transition-all"
-                style={{ background: 'linear-gradient(135deg, #ED1C24 0%, #F5A623 100%)' }}
-              >
-                Yes, Sign Out
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+    <div className="h-screen bg-gray-50 flex overflow-hidden">
       {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />}
 
       {/* Sidebar */}
-      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-64 flex-shrink-0 flex flex-col transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`} style={{ background: 'linear-gradient(180deg, #090E17 0%, #0F172A 100%)', borderRight: '1px solid rgba(255, 255, 255, 0.08)' }}>
-        <div className="px-5 py-4 border-b border-white/10 flex items-center">
-          <img
-            src="/assets/images/logomf.png"
-            alt="Madras Flavours Events logo"
-            style={{ maxHeight: '52px', width: 'auto', objectFit: 'contain' }}
-          />
+      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-60 flex-shrink-0 flex flex-col transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`} style={{ background: 'linear-gradient(180deg, #1A0F00 0%, #2C1A00 100%)' }}>
+        <div className="px-5 py-4 border-b flex items-center gap-2.5" style={{ borderColor: '#3D2800' }}>
+          <div>
+            <img
+              src="/assets/images/logomf.png"
+              alt="Madras Flavours Events Reading logo"
+              style={{ maxHeight: '60px', width: 'auto', objectFit: 'contain' }}
+            />
+            <div className="text-xs font-semibold mt-1" style={{ color: '#F5A623' }}>Reading · Admin Dashboard</div>
+          </div>
         </div>
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {visibleNavItems.map((item) => (
@@ -2902,9 +2807,21 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
             </div>
           </div>
           <button
-            onClick={() => setShowSignOutConfirm(true)}
+            onClick={async () => {
+              try {
+                await signOut(auth);
+                setActiveTab('overview');
+                if (typeof window !== 'undefined') {
+                  localStorage.removeItem('adminActiveTab');
+                  localStorage.removeItem('adminBypass');
+                }
+                setLoggedIn(false);
+              } catch (error) {
+                console.error("Error signing out:", error);
+              }
+            }}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors hover:text-white"
-            style={{ color: '#8FAFA0' }}
+            style={{ color: '#A08060' }}
           >
             <Icon name="ArrowRightOnRectangleIcon" size={17} />
             Sign Out
@@ -3289,7 +3206,7 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                             </span>
                           </td>
                           <td className="px-4 py-3.5">
-                            <a href={buildWhatsAppLink(booking.phone, `Hi ${booking.name.split(' ')[0]}, this is Madras Flavours Events regarding your ${booking.eventType} booking on ${booking.date}.`)}
+                            <a href={buildWhatsAppLink(booking.phone, `Hi ${booking.name.split(' ')[0]}, this is Madras Flavours Events Reading regarding your ${booking.eventType} booking on ${booking.date}.`)}
                               target="_blank" rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg"
                               style={{ background: '#25D366', color: 'white' }}>
@@ -3390,7 +3307,7 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                           <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${STATUS_COLORS[b.status]}`}>
                             {STATUS_LABELS[b.status]}
                           </span>
-                          <a href={buildWhatsAppLink(b.phone, `Hi ${b.name.split(' ')[0]}, just a reminder about your ${b.eventType} at Madras Flavours Events on ${b.date} at ${b.time}. We look forward to seeing you!`)}
+                          <a href={buildWhatsAppLink(b.phone, `Hi ${b.name.split(' ')[0]}, just a reminder about your ${b.eventType} at Madras Flavours Events Reading on ${b.date} at ${b.time}. We look forward to seeing you!`)}
                             target="_blank" rel="noopener noreferrer"
                             className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg flex-shrink-0"
                             style={{ background: '#25D366', color: 'white' }}>
@@ -3448,7 +3365,7 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                           <td className="px-4 py-3.5 text-xs text-gray-500">{customer.lastEvent}</td>
                           <td className="px-4 py-3.5">
                             <div className="flex items-center gap-2">
-                              <a href={buildWhatsAppLink(customer.phone, `Hi ${customer.name.split(' ')[0]}, this is Madras Flavours Events. How can we help you today?`)}
+                              <a href={buildWhatsAppLink(customer.phone, `Hi ${customer.name.split(' ')[0]}, this is Madras Flavours Events Reading. How can we help you today?`)}
                                 target="_blank" rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg"
                                 style={{ background: '#25D366', color: 'white' }}>
@@ -4184,6 +4101,10 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
             <AccessControl currentUserRole={currentUser?.role} />
           )}
 
+          {activeTab === 'content' && (
+            <WebsiteContentUI onNotify={(msg, type) => setCustomAlert({ message: msg, type })} />
+          )}
+
           {/* ─── BOOKING TRACKER ─── */}
           {activeTab === 'tracker' && (
             <div className="space-y-6 max-w-4xl mx-auto">
@@ -4464,7 +4385,7 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                     <div className="text-sm text-gray-500">{selectedBooking.phone}</div>
                     <div className="text-sm text-gray-500">{selectedBooking.address && selectedBooking.address !== 'N/A' ? `${selectedBooking.address} (${selectedBooking.postCode})` : 'No address provided'}</div>
                   </div>
-                  <a href={buildWhatsAppLink(selectedBooking.phone, `Hi ${selectedBooking.name.split(' ')[0]}, this is Madras Flavours Events regarding your ${selectedBooking.eventType} booking.`)}
+                  <a href={buildWhatsAppLink(selectedBooking.phone, `Hi ${selectedBooking.name.split(' ')[0]}, this is Madras Flavours Events Reading regarding your ${selectedBooking.eventType} booking.`)}
                     target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg"
                     style={{ background: '#25D366', color: 'white' }}>
@@ -6321,7 +6242,7 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
               )}
               {selectedBooking.status === 'event_scheduled' && (
                 <div className="space-y-2">
-                  <a href={buildWhatsAppLink(selectedBooking.phone, `Hi ${selectedBooking.name.split(' ')[0]}, just a reminder — your ${selectedBooking.eventType} at Madras Flavours Events is coming up on *${selectedBooking.date}* at *${selectedBooking.time}*!\n\nWe look forward to seeing you and serving your guests! 🎉`)}
+                  <a href={buildWhatsAppLink(selectedBooking.phone, `Hi ${selectedBooking.name.split(' ')[0]}, just a reminder — your ${selectedBooking.eventType} at Madras Flavours Events Reading is coming up on *${selectedBooking.date}* at *${selectedBooking.time}*!\n\nWe look forward to seeing you and serving your guests! 🎉`)}
                     target="_blank" rel="noopener noreferrer"
                     className="w-full flex items-center justify-center gap-1.5 text-sm font-semibold px-4 py-2.5 rounded-xl"
                     style={{ background: '#25D366', color: 'white' }}>
@@ -6533,7 +6454,7 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                   {selectedCustomer.phone}
                 </div>
               </div>
-              <a href={buildWhatsAppLink(selectedCustomer.phone, `Hi ${selectedCustomer.name.split(' ')[0]}, this is Madras Flavours Events. How can we help you today?`)}
+              <a href={buildWhatsAppLink(selectedCustomer.phone, `Hi ${selectedCustomer.name.split(' ')[0]}, this is Madras Flavours Events Reading. How can we help you today?`)}
                 target="_blank" rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl w-full"
                 style={{ background: '#25D366', color: 'white' }}>

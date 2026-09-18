@@ -21,15 +21,15 @@ export interface FaqItem {
 export const DEFAULT_HERO_CONTENT: HeroContent = {
   badgeText: '100% PURE VEGETARIAN CATERING • READING & BERKSHIRE',
   titleLine1: 'Elevate Your Celebration With Authentic',
-  titleHighlight: 'Madras Flavours',
-  subtitle: 'Experience the pinnacle of South Indian hospitality. From sizzling live dosa counters to opulent banquet spreads, freshly crafted with traditional spices and unmatched finesse.',
+  titleHighlight: 'Madras Flavours Events Reading',
+  subtitle: 'Experience the pinnacle of authentic South Indian vegetarian hospitality. From sizzling live dosa counters to bespoke catering feasts, freshly crafted with traditional spices and unmatched finesse.',
   tags: [
-    { icon: '✨', text: 'Sizzling Live Dosa Party' },
-    { icon: '👑', text: 'Curated Banquet Packages' },
+    { icon: '🥞', text: 'Sizzling Live Dosa Party' },
+    { icon: '🍛', text: 'Curated Catering Packages' },
     { icon: '⚡', text: '30 to 500+ Guest Capacity' }
   ],
-  primaryBtnText: 'Explore Packages',
-  secondaryBtnText: 'Instant Enquiry Form'
+  primaryBtnText: 'View Menus & Packages',
+  secondaryBtnText: 'Request a Booking'
 };
 
 export const DEFAULT_FAQS: FaqItem[] = [

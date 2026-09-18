@@ -13,7 +13,7 @@ export default function TermsPage() {
           
           <div className="space-y-6 text-gray-700 leading-relaxed">
             <p>
-              By proceeding with a booking at Madras Flavours Events, you agree to the following terms and conditions:
+              By proceeding with a booking at Madras Flavours Events Reading, you agree to the following terms and conditions:
             </p>
             
             <ul className="list-disc pl-6 space-y-4">
@@ -30,7 +30,7 @@ export default function TermsPage() {
                 The Buffet Service price is based on <strong>2 Hours</strong>; any additional hours will be charged.
               </li>
               <li>
-                We outsourced private delivery on your behalf; Hence Madras Flavours <strong>does not take any responsibility</strong> for any inconvenience caused by the delivery driver.
+                We outsourced private delivery on your behalf; Hence Madras Flavours Events Reading <strong>does not take any responsibility</strong> for any inconvenience caused by the delivery driver.
               </li>
             </ul>
           </div>

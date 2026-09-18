@@ -169,7 +169,7 @@ export default function WebsiteContentUI({ onNotify }: WebsiteContentUIProps) {
             Website Dynamic Content Manager
           </h2>
           <p className="text-xs text-gray-500 mt-0.5">
-            Update your homepage Hero section and FAQs in real-time. Changes appear immediately on the website.
+            Update your homepage Hero section and FAQs in real-time for Madras Flavours Events Reading.
           </p>
         </div>
 
@@ -219,94 +219,95 @@ export default function WebsiteContentUI({ onNotify }: WebsiteContentUIProps) {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
                   Top Highlight Badge Text
                 </label>
                 <input
                   type="text"
                   value={hero.badgeText}
                   onChange={(e) => setHero({ ...hero, badgeText: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 bg-gray-50"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 bg-white font-medium shadow-2xs"
                   placeholder="e.g. 100% PURE VEGETARIAN CATERING • READING & BERKSHIRE"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
                   Main Headline (Line 1)
                 </label>
                 <input
                   type="text"
                   value={hero.titleLine1}
                   onChange={(e) => setHero({ ...hero, titleLine1: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 bg-gray-50 font-semibold"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 bg-white font-medium shadow-2xs"
                   placeholder="e.g. Elevate Your Celebration With Authentic"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
-                  Highlighted Title (Line 2 / Gold Gradient)
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                  Highlighted Brand Title (Gold Gradient)
                 </label>
                 <input
                   type="text"
                   value={hero.titleHighlight}
                   onChange={(e) => setHero({ ...hero, titleHighlight: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 bg-gray-50 font-bold text-amber-700"
-                  placeholder="e.g. Madras Flavours"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 bg-white font-medium shadow-2xs"
+                  placeholder="e.g. Madras Flavours Events Reading"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
-                  Description / Subtitle Paragraph
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                  Subheading Description
                 </label>
                 <textarea
                   rows={3}
                   value={hero.subtitle}
                   onChange={(e) => setHero({ ...hero, subtitle: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 bg-gray-50 leading-relaxed"
-                  placeholder="Enter welcoming description..."
+                  className="w-full border border-gray-300 rounded-xl p-3.5 text-sm text-gray-900 focus:outline-none focus:border-amber-500 bg-white font-medium shadow-2xs resize-none"
+                  placeholder="Brief story highlighting heritage, live counters, guest capacity..."
                 />
               </div>
 
-              <div className="pt-2">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Feature Pill Badges ({hero.tags.length})
+              {/* Tags Editor */}
+              <div className="pt-2 border-t border-gray-100">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Feature Highlights / Pill Tags ({hero.tags.length})
                   </label>
                   <button
                     type="button"
                     onClick={handleAddTag}
-                    className="text-xs text-amber-700 hover:text-amber-900 font-semibold flex items-center gap-1"
+                    className="text-xs font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1"
                   >
-                    <Icon name="PlusCircleIcon" size={14} />
-                    <span>Add Badge</span>
+                    <Icon name="PlusCircleIcon" size={15} />
+                    <span>Add Tag</span>
                   </button>
                 </div>
 
                 <div className="space-y-2">
                   {hero.tags.map((tag, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
+                    <div key={idx} className="flex items-center gap-2 bg-gray-50 p-2 rounded-xl border border-gray-200">
                       <input
                         type="text"
                         value={tag.icon}
                         onChange={(e) => handleUpdateTag(idx, 'icon', e.target.value)}
-                        className="w-12 text-center border border-gray-200 rounded-xl px-2 py-2 text-sm bg-gray-50 focus:outline-none focus:border-amber-500"
-                        placeholder="✨"
+                        className="w-12 text-center border border-gray-300 rounded-lg py-1.5 text-base bg-white text-gray-900"
+                        title="Emoji / Icon"
                       />
                       <input
                         type="text"
                         value={tag.text}
                         onChange={(e) => handleUpdateTag(idx, 'text', e.target.value)}
-                        className="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-sm bg-gray-50 focus:outline-none focus:border-amber-500"
-                        placeholder="Badge text..."
+                        className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-gray-900 bg-white font-medium"
+                        placeholder="Tag label..."
                       />
                       <button
                         type="button"
                         onClick={() => handleDeleteTag(idx)}
-                        className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                        title="Delete Badge"
+                        className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                        title="Remove tag"
                       >
                         <Icon name="TrashIcon" size={16} />
                       </button>
@@ -315,136 +316,110 @@ export default function WebsiteContentUI({ onNotify }: WebsiteContentUIProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              {/* Action Buttons Text */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-100">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
                     Primary CTA Button Text
                   </label>
                   <input
                     type="text"
                     value={hero.primaryBtnText}
                     onChange={(e) => setHero({ ...hero, primaryBtnText: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-gray-50 focus:outline-none focus:border-amber-500"
-                    placeholder="Explore Packages"
+                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-xs text-gray-900 focus:outline-none bg-white font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
                     Secondary CTA Button Text
                   </label>
                   <input
                     type="text"
                     value={hero.secondaryBtnText}
                     onChange={(e) => setHero({ ...hero, secondaryBtnText: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-gray-50 focus:outline-none focus:border-amber-500"
-                    placeholder="Instant Enquiry Form"
+                    className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-xs text-gray-900 focus:outline-none bg-white font-medium"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-gray-100 flex items-center justify-end">
+            <div className="pt-4 border-t border-gray-100 flex justify-end">
               <button
+                type="button"
                 onClick={handleSaveHero}
                 disabled={isSavingHero}
-                className="text-white font-bold px-6 py-2.5 rounded-xl transition-all text-sm shadow-md hover:shadow-lg disabled:opacity-70 flex items-center gap-2"
+                className="px-6 py-2.5 rounded-xl text-white text-xs font-bold transition-all shadow-md flex items-center gap-2 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 cursor-pointer"
                 style={{ background: 'linear-gradient(135deg, #ED1C24 0%, #F5A623 100%)' }}
               >
                 {isSavingHero ? (
                   <>
-                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                    <span className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent" />
                     <span>Saving Hero...</span>
                   </>
                 ) : (
                   <>
                     <Icon name="CloudArrowUpIcon" size={16} />
-                    <span>Save Hero Section</span>
+                    <span>Publish Hero Changes</span>
                   </>
                 )}
               </button>
             </div>
           </div>
 
-          {/* Live Preview */}
+          {/* Live Preview Column */}
           <div className="lg:col-span-5 space-y-4">
-            <div className="bg-[#0B0704] text-white rounded-2xl p-6 border border-amber-950/60 shadow-xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
-              
-              <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
-                <span className="text-[11px] uppercase tracking-widest text-amber-400 font-bold">
-                  Live Preview
-                </span>
-                <span className="text-[10px] text-gray-400 bg-white/10 px-2 py-0.5 rounded-full">
-                  Homepage Hero
-                </span>
+            <div className="bg-[#1C1208] rounded-2xl p-6 border border-amber-500/20 text-white shadow-xl relative overflow-hidden">
+              <div className="text-[10px] font-bold tracking-wider uppercase text-amber-400/80 mb-3 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Live Hero Preview</span>
               </div>
 
               <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-amber-400/30 bg-amber-950/40 text-[10px] font-bold uppercase tracking-wider text-amber-300">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                  <span>{hero.badgeText || 'Badge text...'}</span>
-                </div>
+                <span className="inline-block text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  {hero.badgeText || 'HIGHLIGHT BADGE'}
+                </span>
 
-                <h1 className="text-xl sm:text-2xl font-extrabold text-white leading-tight">
-                  {hero.titleLine1 || 'Main Title'}{' '}
-                  <span className="text-amber-400 font-display block">
-                    {hero.titleHighlight || 'Highlighted Brand'}
-                  </span>
+                <h1 className="text-2xl font-extrabold text-white leading-tight">
+                  {hero.titleLine1}{' '}
+                  <span className="text-amber-400">{hero.titleHighlight}</span>
                 </h1>
 
-                <p className="text-xs text-gray-300 leading-relaxed line-clamp-4">
-                  {hero.subtitle || 'Description text...'}
+                <p className="text-xs text-gray-300 line-clamp-3 leading-relaxed">
+                  {hero.subtitle}
                 </p>
 
                 <div className="flex flex-wrap gap-1.5 pt-1">
-                  {hero.tags.map((tag, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2.5 py-1 rounded-lg text-[11px] bg-white/5 border border-white/10 text-gray-300 flex items-center gap-1"
-                    >
-                      <span>{tag.icon}</span> <span>{tag.text}</span>
+                  {hero.tags.map((t, i) => (
+                    <span key={i} className="text-[10px] px-2.5 py-1 rounded-lg bg-white/10 text-gray-200 border border-white/10">
+                      {t.icon} {t.text}
                     </span>
                   ))}
                 </div>
 
-                <div className="flex items-center gap-2 pt-2">
-                  <div
-                    className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white shadow-sm flex items-center gap-1"
-                    style={{ background: 'linear-gradient(135deg, #ED1C24, #F5A623)' }}
-                  >
-                    <span>{hero.primaryBtnText}</span>
-                    <Icon name="ArrowDownIcon" size={12} />
-                  </div>
-                  <div className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-gray-300 border border-white/20 bg-white/5 flex items-center gap-1">
-                    <span>{hero.secondaryBtnText}</span>
-                    <Icon name="CalendarDaysIcon" size={12} />
-                  </div>
+                <div className="flex gap-2 pt-2">
+                  <span className="text-[11px] font-bold px-4 py-2 rounded-lg text-white" style={{ background: 'linear-gradient(135deg, #ED1C24, #F5A623)' }}>
+                    {hero.primaryBtnText}
+                  </span>
+                  <span className="text-[11px] font-semibold px-4 py-2 rounded-lg border border-white/20 text-gray-300">
+                    {hero.secondaryBtnText}
+                  </span>
                 </div>
-              </div>
-            </div>
-
-            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-900 leading-relaxed flex items-start gap-2.5">
-              <Icon name="InformationCircleIcon" size={18} className="text-amber-700 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold mb-0.5">Real-Time Cloud Synchronization</p>
-                <p className="text-amber-800/80">
-                  When you click <strong>Save Hero Section</strong>, changes are stored in Firestore under <code className="bg-amber-100 px-1 rounded">site_data/hero_content</code> and reflect live for visiting customers.
-                </p>
               </div>
             </div>
           </div>
         </div>
       )}
 
+      {/* FAQs Tab */}
       {activeTab === 'faqs' && (
         <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4">
             <div>
-              <h3 className="text-base font-bold text-gray-900">
-                Frequently Asked Questions ({faqs.length})
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                <span>Frequently Asked Questions ({faqs.length})</span>
               </h3>
-              <p className="text-xs text-gray-500">
-                Add, edit, or remove FAQ items displayed on the homepage.
+              <p className="text-xs text-gray-500 mt-0.5">
+                Add, edit, or remove customer FAQs displayed on the website.
               </p>
             </div>
 
@@ -452,38 +427,19 @@ export default function WebsiteContentUI({ onNotify }: WebsiteContentUIProps) {
               <button
                 type="button"
                 onClick={handleResetFaqs}
-                className="text-xs text-gray-600 hover:text-red-600 px-3 py-1.5 rounded-lg border border-gray-200 hover:border-red-200 transition-colors flex items-center gap-1"
+                className="text-xs text-gray-500 hover:text-red-600 transition-colors flex items-center gap-1 px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50"
               >
                 <Icon name="ArrowPathIcon" size={13} />
                 <span>Reset Defaults</span>
               </button>
-
               <button
                 type="button"
                 onClick={handleAddFaq}
-                className="text-xs text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
-              >
-                <Icon name="PlusCircleIcon" size={14} />
-                <span>Add FAQ</span>
-              </button>
-
-              <button
-                onClick={handleSaveFaqs}
-                disabled={isSavingFaqs}
-                className="text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shadow-md hover:shadow-lg disabled:opacity-70 flex items-center gap-1.5"
+                className="text-xs font-bold text-white px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm hover:brightness-110"
                 style={{ background: 'linear-gradient(135deg, #ED1C24 0%, #F5A623 100%)' }}
               >
-                {isSavingFaqs ? (
-                  <>
-                    <span className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent" />
-                    <span>Saving...</span>
-                  </>
-                ) : (
-                  <>
-                    <Icon name="CloudArrowUpIcon" size={15} />
-                    <span>Save All FAQs</span>
-                  </>
-                )}
+                <Icon name="PlusCircleIcon" size={15} />
+                <span>Add Question</span>
               </button>
             </div>
           </div>
@@ -492,70 +448,60 @@ export default function WebsiteContentUI({ onNotify }: WebsiteContentUIProps) {
             {faqs.map((faq, idx) => (
               <div
                 key={idx}
-                className="border border-gray-200 rounded-xl p-4 bg-gray-50/70 hover:bg-gray-50 transition-all space-y-3 relative group"
+                className="p-5 rounded-2xl border border-gray-200 hover:border-amber-300 transition-all bg-gray-50/50 space-y-3 relative group"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 flex-1">
-                    <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-800 text-xs font-bold flex items-center justify-center flex-shrink-0">
-                      {idx + 1}
-                    </span>
-                    <input
-                      type="text"
-                      value={faq.question}
-                      onChange={(e) => handleUpdateFaq(idx, 'question', e.target.value)}
-                      className="w-full font-semibold text-sm text-gray-900 border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:border-amber-500"
-                      placeholder="Enter question..."
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-900 font-bold text-xs flex items-center justify-center flex-shrink-0">
+                        {idx + 1}
+                      </span>
+                      <input
+                        type="text"
+                        value={faq.question}
+                        onChange={(e) => handleUpdateFaq(idx, 'question', e.target.value)}
+                        className="w-full border border-gray-300 rounded-xl px-3.5 py-2 text-sm text-gray-900 font-bold bg-white focus:outline-none focus:border-amber-500"
+                        placeholder="e.g. Do you bring cooking equipment?"
+                      />
+                    </div>
+                    <textarea
+                      rows={3}
+                      value={faq.answer}
+                      onChange={(e) => handleUpdateFaq(idx, 'answer', e.target.value)}
+                      className="w-full border border-gray-300 rounded-xl p-3 text-xs text-gray-800 bg-white focus:outline-none focus:border-amber-500 font-medium resize-none"
+                      placeholder="Detailed answer text..."
                     />
                   </div>
-
                   <button
                     type="button"
                     onClick={() => handleDeleteFaq(idx)}
-                    className="text-gray-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
-                    title="Delete FAQ"
+                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors mt-1"
+                    title="Delete this FAQ"
                   >
-                    <Icon name="TrashIcon" size={16} />
+                    <Icon name="TrashIcon" size={18} />
                   </button>
-                </div>
-
-                <div className="pl-8">
-                  <textarea
-                    rows={2}
-                    value={faq.answer}
-                    onChange={(e) => handleUpdateFaq(idx, 'answer', e.target.value)}
-                    className="w-full text-xs text-gray-700 leading-relaxed border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-amber-500"
-                    placeholder="Enter detailed answer..."
-                  />
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+          <div className="pt-4 border-t border-gray-100 flex justify-end">
             <button
               type="button"
-              onClick={handleAddFaq}
-              className="text-xs text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-300 font-bold px-4 py-2 rounded-xl transition-colors flex items-center gap-1.5"
-            >
-              <Icon name="PlusCircleIcon" size={16} />
-              <span>Add Another Question</span>
-            </button>
-
-            <button
               onClick={handleSaveFaqs}
               disabled={isSavingFaqs}
-              className="text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-70 flex items-center gap-2"
+              className="px-6 py-2.5 rounded-xl text-white text-xs font-bold transition-all shadow-md flex items-center gap-2 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 cursor-pointer"
               style={{ background: 'linear-gradient(135deg, #ED1C24 0%, #F5A623 100%)' }}
             >
               {isSavingFaqs ? (
                 <>
-                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                  <span className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent" />
                   <span>Saving FAQs...</span>
                 </>
               ) : (
                 <>
                   <Icon name="CloudArrowUpIcon" size={16} />
-                  <span>Save All FAQs</span>
+                  <span>Publish All FAQs</span>
                 </>
               )}
             </button>

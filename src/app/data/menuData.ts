@@ -214,7 +214,7 @@ export const TERMS_AND_CONDITIONS = {
     ],
   },
   soundLimiter: {
-    title: 'MADRAS FLAVOURS EVENTS SOUND LIMITER\'S',
+    title: 'MADRAS FLAVOURS EVENTS READING SOUND LIMITER\'S',
     items: [
       'DJ to Maintain Policy or will be held responsible. Before 10:00 pm - Upto 90dB | After 10:00 pm - Upto 85dB.',
       'DJ and Client will be liable and responsible if not adhered to the sound and timings as agreed and will be fined if any licensing are in breach during an Event.',

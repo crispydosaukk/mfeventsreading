@@ -28,7 +28,7 @@ import {
 
 const EVENT_TYPES = ['Wedding', 'Birthday', 'Corporate', 'Anniversary', 'Graduation', 'Other'];
 
-type MenuTab = 'packages' | 'menu' | 'live' | 'extras';
+type MenuTab = 'packages' | 'menu' | 'live';
 
 export default function HomePage() {
   const [menus, setMenus] = useState({
@@ -89,7 +89,7 @@ export default function HomePage() {
       if (docSnap.exists()) {
         const data = docSnap.data();
         setMenus({
-          NEW_PACKAGES: data.NEW_PACKAGES || data.BANQUET_PACKAGES || DEFAULT_NEW_PACKAGES,
+          NEW_PACKAGES: data.NEW_PACKAGES || DEFAULT_NEW_PACKAGES,
           MENU_CATEGORIES: data.MENU_CATEGORIES || DEFAULT_MENU_CATEGORIES,
           LIVE_DOSA_PARTY_MENU: data.LIVE_DOSA_PARTY_MENU || DEFAULT_LIVE_DOSA_PARTY_MENU,
           EXTRAS: data.EXTRAS || DEFAULT_EXTRAS,
@@ -154,9 +154,7 @@ export default function HomePage() {
     });
   }, []);
 
-  const { NEW_PACKAGES, MENU_CATEGORIES, LIVE_DOSA_PARTY_MENU, EXTRAS, TABLE_SERVICE, KIDS_PRICING, STANDARD_SETUP, TERMS_AND_CONDITIONS, DRY_HIRE_PRICES } = menus;
-
-  // faqs is dynamic state
+  const { NEW_PACKAGES, MENU_CATEGORIES, LIVE_DOSA_PARTY_MENU, EXTRAS } = menus;
 
   const [bookingForm, setBookingForm] = useState({
     name: '', email: '', phone: '', eventType: '', serviceType: '', date: '', timeOfDay: '', guests: '', message: '', selectedPackage: '', postCode: '', address: ''
@@ -167,6 +165,7 @@ export default function HomePage() {
     const el = document.getElementById('book');
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
+
   const [submitted, setSubmitted] = useState(false);
   const [activeMenuTab, setActiveMenuTab] = useState<MenuTab>('packages');
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -178,7 +177,6 @@ export default function HomePage() {
     const cleaned = digits.replace(/\s/g, '');
     if (cleaned === '') return true;
     if (/[^\d]/.test(cleaned)) return false;
-    // Accept: 07XXXXXXXXX (10 local digits starting with 07) or 7XXXXXXXXX (9 local digits starting with 7)
     return /^(07\d{9}|7\d{9})$/.test(cleaned);
   };
 
@@ -220,7 +218,7 @@ export default function HomePage() {
       }
       
       const selectedPkg = NEW_PACKAGES.find(p => p.name === bookingForm.selectedPackage);
-      const isLiveDosa = bookingForm.selectedPackage === 'Outdoor Live Dosa Party';
+      const isLiveDosa = bookingForm.selectedPackage === 'Outdoor Live Dosa Party' || bookingForm.selectedPackage.includes('Live Dosa');
       let selectedExtra = null;
       if (!selectedPkg && !isLiveDosa) {
          selectedExtra = EXTRAS?.find((e: any) => e.name === bookingForm.selectedPackage);
@@ -230,7 +228,6 @@ export default function HomePage() {
       if (selectedPkg) {
         baseAmount = selectedPkg.pricePerPerson * guestCount;
       } else if (isLiveDosa) {
-        // live dosa party base estimation
         let dosaPrice = 11.00;
         if (bookingForm.date) {
           const d = new Date(bookingForm.date);
@@ -265,7 +262,6 @@ export default function HomePage() {
         createdAt: new Date().toISOString()
       });
 
-      // Trigger email notification via Firebase Cloud Functions
       try {
         const sendBookingEmail = httpsCallable(functions, 'sendBookingEmail');
         await sendBookingEmail({
@@ -282,7 +278,6 @@ export default function HomePage() {
         });
       } catch (emailError) {
         console.error("Failed to send notification email:", emailError);
-        // We do not stop the user flow if the email fails, as the booking is already recorded
       }
 
       setSubmitted(true);
@@ -303,34 +298,39 @@ export default function HomePage() {
     setExpandedSection(prev => prev === key ? null : key);
   };
 
-﻿  return (
-    <div className="min-h-screen bg-[#0E0906] text-gray-100 overflow-x-hidden selection:bg-amber-500/30 selection:text-amber-200">
+  return (
+    <div className="min-h-screen bg-[#070402] text-gray-100 overflow-x-hidden selection:bg-amber-500/30 selection:text-amber-200">
       <Header onOpenModal={() => {}} />
 
-      {/* ─── HERO WITH ATMOSPHERIC BACKGROUND IMAGE ─── */}
+      {/* ─── HERO WITH ATMOSPHERIC BACKGROUND ─── */}
       <section className="relative pt-28 pb-16 px-6 min-h-[92vh] flex items-center justify-center overflow-hidden">
-        {/* Background Image with Dark Luxury Vignette Overlay */}
-        <div
-          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat transition-transform duration-1000 scale-105"
-          style={{ backgroundImage: "url('/assets/images/hero-catering-bg.jpg')" }}
-        />
-        {/* Multilayered cinematic gradient overlay */}
-        <div className="absolute inset-0 z-0 bg-gradient-to-r from-black/95 via-black/80 to-black/90 md:from-black/90 md:via-black/75 md:to-black/85" />
-        <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#0E0906] via-transparent to-black/60" />
-        <div className="absolute top-0 right-1/4 w-96 h-96 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+        {/* Multilayered warm luxury gradient overlay */}
+        <div className="absolute inset-0 z-0 bg-gradient-to-r from-black/95 via-[#140A04]/90 to-black/95" />
+        <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#090503] via-transparent to-black/70" />
+        <div className="absolute top-10 right-1/4 w-96 h-96 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 left-10 w-96 h-96 rounded-full bg-red-600/10 blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-7xl mx-auto w-full flex flex-col lg:flex-row items-center gap-12 lg:gap-16 py-6">
 
           {/* ── Left Column: Compelling Narrative ── */}
           <div className="flex-1 text-center lg:text-left space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-amber-400/30 bg-amber-950/40 backdrop-blur-md shadow-lg shadow-amber-950/30">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-amber-500/30 bg-amber-950/40 backdrop-blur-md shadow-lg shadow-amber-950/30">
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-              <span className="text-xs font-bold uppercase tracking-widest text-amber-300">{heroContent.badgeText}</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-amber-300">
+                {heroContent.badgeText}
+              </span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.12]">{heroContent.titleLine1} <br className="hidden sm:inline" /><span className="gold-text-gradient font-display">{heroContent.titleHighlight}</span></h1>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.12]">
+              {heroContent.titleLine1} <br className="hidden sm:inline" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-red-500 font-display">
+                {heroContent.titleHighlight}
+              </span>
+            </h1>
 
-            <p className="text-base sm:text-lg text-gray-300 max-w-2xl lg:mx-0 mx-auto leading-relaxed">{heroContent.subtitle}</p>
+            <p className="text-base sm:text-lg text-gray-300 max-w-2xl lg:mx-0 mx-auto leading-relaxed">
+              {heroContent.subtitle}
+            </p>
 
             {/* Value Highlights Pill Tags */}
             <div className="flex flex-wrap gap-2.5 justify-center lg:justify-start pt-2">
@@ -348,7 +348,7 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-3">
               <a
                 href="#menus"
-                className="text-white font-semibold px-8 py-3.5 rounded-xl transition-all shadow-xl hover:shadow-amber-500/25 hover:scale-[1.02] flex items-center justify-center gap-2"
+                className="text-white font-semibold px-8 py-3.5 rounded-xl transition-all shadow-xl hover:shadow-amber-500/25 hover:scale-[1.02] flex items-center justify-center gap-2 cursor-pointer"
                 style={{ background: 'linear-gradient(135deg, #ED1C24 0%, #F5A623 100%)' }}
               >
                 <span>{heroContent.primaryBtnText}</span>
@@ -356,16 +356,17 @@ export default function HomePage() {
               </a>
               <a
                 href="#book"
-                className="glass-card-dark text-gray-200 hover:text-white font-semibold px-8 py-3.5 rounded-xl transition-all hover:border-amber-400/50 flex items-center justify-center gap-2"
+                className="bg-white/5 border border-white/15 text-gray-200 hover:text-white font-semibold px-8 py-3.5 rounded-xl transition-all hover:border-amber-400/50 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>{heroContent.secondaryBtnText}</span>
                 <Icon name="CalendarDaysIcon" size={16} />
               </a>
             </div>
           </div>
-﻿          {/* ── Right Column: Modern Glassmorphic Booking Form ── */}
+
+          {/* ── Right Column: High-Visibility Booking Form ── */}
           <div id="book" className="w-full lg:w-[490px] flex-shrink-0">
-            <div className="glass-card-gold rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden backdrop-blur-2xl">
+            <div className="bg-[#18110B]/95 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden backdrop-blur-2xl border border-amber-500/30">
               <div className="absolute -top-16 -right-16 w-40 h-40 bg-amber-500/20 rounded-full blur-2xl pointer-events-none" />
 
               <div className="relative z-10 text-center mb-6">
@@ -373,30 +374,30 @@ export default function HomePage() {
                   <span>Request an Event Booking</span>
                 </h2>
                 <p className="text-xs text-amber-200/80 mt-1">
-                  Fill in your event details below to receive a personalized quote within 24 hours.
+                  Fill in your details below for Madras Flavours Events Reading.
                 </p>
               </div>
 
               {customHomeAlert && (
-                <div className={`mb-4 p-3 rounded-xl text-xs font-medium border flex items-center gap-2 ${customHomeAlert.type === 'error' ? 'bg-red-950/50 border-red-500/40 text-red-200' : 'bg-emerald-950/50 border-emerald-500/40 text-emerald-200'}`}>
+                <div className={`mb-4 p-3 rounded-xl text-xs font-medium border flex items-center gap-2 ${customHomeAlert.type === 'error' ? 'bg-red-950/70 border-red-500/40 text-red-200' : 'bg-emerald-950/70 border-emerald-500/40 text-emerald-200'}`}>
                   <Icon name={customHomeAlert.type === 'error' ? 'ExclamationTriangleIcon' : 'CheckCircleIcon'} size={18} />
                   <span>{customHomeAlert.message}</span>
                 </div>
               )}
 
               {submitted ? (
-                <div className="text-center py-10 rounded-2xl border border-emerald-500/30 bg-emerald-950/30 backdrop-blur-md">
-                  <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                <div className="text-center py-10 rounded-2xl border border-amber-500/30 bg-amber-950/30 backdrop-blur-md">
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3 bg-amber-500/20 text-amber-400 border border-amber-500/40">
                     <Icon name="CheckIcon" size={28} />
                   </div>
                   <h3 className="text-lg font-bold text-white mb-1">Booking Enquiry Received!</h3>
-                  <p className="text-xs text-emerald-200/80 max-w-xs mx-auto mb-6 leading-relaxed">
-                    Thank you for choosing Madras Flavours Events. Our catering team will review your requirements and reach out promptly.
+                  <p className="text-xs text-amber-200/80 max-w-xs mx-auto mb-6 leading-relaxed">
+                    Thank you for choosing Madras Flavours Events Reading. Our catering team will contact you within 24 hours.
                   </p>
                   <button
                     onClick={() => setSubmitted(false)}
-                    className="px-6 py-2.5 rounded-xl text-xs font-semibold text-white transition-all shadow-md"
-                    style={{ background: 'linear-gradient(135deg, #ED1C24, #F5A623)' }}
+                    className="px-6 py-2.5 rounded-xl text-xs font-semibold text-white transition-all shadow-md cursor-pointer"
+                    style={{ background: 'linear-gradient(135deg, #ED1C24 0%, #F5A623 100%)' }}
                   >
                     Submit Another Enquiry
                   </button>
@@ -406,24 +407,24 @@ export default function HomePage() {
                   {/* Name & Phone */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-amber-200/90 mb-1">Your Name *</label>
+                      <label className="block text-xs font-semibold text-amber-200/90 mb-1">Your Name *</label>
                       <input
                         type="text"
                         required
                         value={bookingForm.name}
                         onChange={(e) => setBookingForm({ ...bookingForm, name: e.target.value })}
-                        className="w-full bg-white/5 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all"
-                        placeholder="e.g. Anand Kumar"
+                        className="w-full bg-white text-gray-900 border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all placeholder-gray-400"
+                        placeholder="e.g. Ramesh Patel"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-amber-200/90 mb-1">UK Phone *</label>
+                      <label className="block text-xs font-semibold text-amber-200/90 mb-1">UK Phone *</label>
                       <input
                         type="tel"
                         required
                         value={bookingForm.phone}
                         onChange={(e) => handlePhoneChange(e.target.value)}
-                        className={`w-full bg-white/5 border rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none transition-all ${phoneError ? 'border-red-500 ring-1 ring-red-500' : 'border-white/15 focus:border-amber-400 focus:ring-1 focus:ring-amber-400'}`}
+                        className={`w-full bg-white text-gray-900 border rounded-xl px-3.5 py-2.5 text-sm font-medium focus:outline-none transition-all placeholder-gray-400 ${phoneError ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20'}`}
                         placeholder="07700 900000"
                       />
                       {phoneError && <span className="text-[11px] text-red-400 mt-1 block">{phoneError}</span>}
@@ -433,23 +434,23 @@ export default function HomePage() {
                   {/* Email & Event Type */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-amber-200/90 mb-1">Email Address *</label>
+                      <label className="block text-xs font-semibold text-amber-200/90 mb-1">Email Address *</label>
                       <input
                         type="email"
                         required
                         value={bookingForm.email}
                         onChange={(e) => setBookingForm({ ...bookingForm, email: e.target.value })}
-                        className="w-full bg-white/5 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all"
-                        placeholder="name@example.com"
+                        className="w-full bg-white text-gray-900 border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all placeholder-gray-400"
+                        placeholder="ramesh@example.com"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-amber-200/90 mb-1">Event Type *</label>
+                      <label className="block text-xs font-semibold text-amber-200/90 mb-1">Event Type *</label>
                       <select
                         required
                         value={bookingForm.eventType}
                         onChange={(e) => setBookingForm({ ...bookingForm, eventType: e.target.value })}
-                        className="w-full bg-[#1A120B] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all"
+                        className="w-full bg-white text-gray-900 border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                       >
                         <option value="">Select type</option>
                         {EVENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -457,17 +458,17 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  {/* Service Type */}
+                  {/* Service Format */}
                   <div>
-                    <label className="block text-xs font-medium text-amber-200/90 mb-1">Service Format *</label>
+                    <label className="block text-xs font-semibold text-amber-200/90 mb-1">Service Format *</label>
                     <select
                       required
                       value={bookingForm.serviceType}
                       onChange={(e) => setBookingForm({ ...bookingForm, serviceType: e.target.value })}
-                      className="w-full bg-[#1A120B] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all"
+                      className="w-full bg-white text-gray-900 border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                     >
-                      <option value="">Select Service Type</option>
-                      <option value="Outdoor Catering">Outdoor Catering (At your venue / home)</option>
+                      <option value="">Select Service Format</option>
+                      <option value="Outdoor Catering">Outdoor Catering (At your home / venue)</option>
                       <option value="Party Hall Booking">In-House Party Hall Booking (Reading)</option>
                     </select>
                   </div>
@@ -475,24 +476,24 @@ export default function HomePage() {
                   {/* Address & Postcode */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-amber-200/90 mb-1">Event Address *</label>
+                      <label className="block text-xs font-semibold text-amber-200/90 mb-1">Event Address *</label>
                       <input
                         type="text"
                         required
                         value={bookingForm.address}
                         onChange={(e) => setBookingForm({ ...bookingForm, address: e.target.value })}
-                        className="w-full bg-white/5 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all"
-                        placeholder="Street / Hall Address"
+                        className="w-full bg-white text-gray-900 border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all placeholder-gray-400"
+                        placeholder="Street / Venue address"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-amber-200/90 mb-1">Event Postcode *</label>
+                      <label className="block text-xs font-semibold text-amber-200/90 mb-1">Event Postcode *</label>
                       <input
                         type="text"
                         required
                         value={bookingForm.postCode}
                         onChange={(e) => setBookingForm({ ...bookingForm, postCode: e.target.value })}
-                        className="w-full bg-white/5 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all"
+                        className="w-full bg-white text-gray-900 border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all placeholder-gray-400 uppercase"
                         placeholder="e.g. RG1 1AA"
                       />
                     </div>
@@ -500,7 +501,7 @@ export default function HomePage() {
 
                   {/* Preferred Package */}
                   <div>
-                    <label className="block text-xs font-medium text-amber-200/90 mb-1 flex items-center justify-between">
+                    <label className="block text-xs font-semibold text-amber-200/90 mb-1 flex items-center justify-between">
                       <span>Preferred Catering Package</span>
                       {bookingForm.selectedPackage && (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -511,10 +512,10 @@ export default function HomePage() {
                     <select
                       value={bookingForm.selectedPackage}
                       onChange={(e) => setBookingForm({ ...bookingForm, selectedPackage: e.target.value })}
-                      className="w-full bg-[#1A120B] border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all"
+                      className="w-full bg-white text-gray-900 border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                     >
                       <option value="">No specific package – help me choose</option>
-                      <optgroup label="── Banquet Packages ──">
+                      <optgroup label="── Catering Packages ──">
                         {NEW_PACKAGES.map((pkg) => (
                           <option key={pkg.id} value={pkg.name}>
                             {pkg.name} — £{pkg.pricePerPerson}/guest
@@ -522,31 +523,34 @@ export default function HomePage() {
                         ))}
                       </optgroup>
                       <optgroup label="── Live Dosa Experience ──">
-                        <option value="Live Dosa Party (Weekday: £11 / Weekend: £12)">Live Dosa Party Counter</option>
+                        <option value="Outdoor Live Dosa Party">Outdoor Live Dosa Party Counter</option>
                       </optgroup>
                     </select>
                   </div>
 
-                  {/* Date, Time & Guest count */}
+                  {/* Date, Time & Guest Count */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <div>
-                      <label className="block text-xs font-medium text-amber-200/90 mb-1">Date *</label>
+                      <label className="block text-xs font-semibold text-amber-200/90 mb-1">Date *</label>
                       <input
                         type="date"
                         required
                         min={new Date().toISOString().split('T')[0]}
                         value={bookingForm.date}
                         onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })}
-                        className="w-full bg-[#1A120B] border border-white/15 rounded-xl px-2.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all"
+                        className={`w-full bg-white text-gray-900 border rounded-xl px-2.5 py-2.5 text-xs font-medium focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all ${blockedDates.includes(bookingForm.date) ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300'}`}
                       />
+                      {blockedDates.includes(bookingForm.date) && (
+                        <span className="text-red-400 text-[10px] font-bold mt-1 block">Date Unavailable</span>
+                      )}
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-amber-200/90 mb-1">Time Slot *</label>
+                      <label className="block text-xs font-semibold text-amber-200/90 mb-1">Time Slot *</label>
                       <select
                         required
                         value={bookingForm.timeOfDay}
                         onChange={(e) => setBookingForm({ ...bookingForm, timeOfDay: e.target.value })}
-                        className="w-full bg-[#1A120B] border border-white/15 rounded-xl px-2 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all"
+                        className="w-full bg-white text-gray-900 border border-gray-300 rounded-xl px-2 py-2.5 text-xs font-medium focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                       >
                         <option value="">Select Time</option>
                         {formSettings.timeSlots.map((slot) => (
@@ -555,7 +559,7 @@ export default function HomePage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-amber-200/90 mb-1">Guests * (Min {minGuests})</label>
+                      <label className="block text-xs font-semibold text-amber-200/90 mb-1">Guests * (Min {minGuests})</label>
                       <input
                         type="number"
                         required
@@ -563,7 +567,7 @@ export default function HomePage() {
                         max={500}
                         value={bookingForm.guests}
                         onChange={(e) => setBookingForm({ ...bookingForm, guests: e.target.value })}
-                        className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all"
+                        className="w-full bg-white text-gray-900 border border-gray-300 rounded-xl px-3 py-2.5 text-xs font-medium focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all placeholder-gray-400"
                         placeholder={`Min ${minGuests}`}
                       />
                     </div>
@@ -571,12 +575,12 @@ export default function HomePage() {
 
                   {/* Notes */}
                   <div>
-                    <label className="block text-xs font-medium text-amber-200/90 mb-1">Special Preferences / Dietary Notes</label>
+                    <label className="block text-xs font-semibold text-amber-200/90 mb-1">Special Preferences / Dietary Notes</label>
                     <textarea
                       rows={2}
                       value={bookingForm.message}
                       onChange={(e) => setBookingForm({ ...bookingForm, message: e.target.value })}
-                      className="w-full bg-white/5 border border-white/15 rounded-xl px-3.5 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 transition-all resize-none"
+                      className="w-full bg-white text-gray-900 border border-gray-300 rounded-xl px-3.5 py-2 text-sm font-medium focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all placeholder-gray-400 resize-none"
                       placeholder="e.g. Jain dietary preferences, additional dessert stations, spice level..."
                     />
                   </div>
@@ -609,7 +613,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── HIGHLIGHT METRICS STRIP ─── */}
-      <section className="relative z-20 py-8 px-6 border-y border-white/10 bg-[#120D09]">
+      <section className="relative z-20 py-8 px-6 border-y border-white/10 bg-[#0E0805]">
         <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
             { value: '500+', label: 'Celebrations Hosted' },
@@ -618,94 +622,22 @@ export default function HomePage() {
             { value: '100%', label: 'Pure Veg Fresh Preparation' },
           ].map((stat) => (
             <div key={stat.label} className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
-              <div className="text-2xl sm:text-3xl font-extrabold gold-text-gradient">{stat.value}</div>
+              <div className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-red-500">{stat.value}</div>
               <div className="text-xs text-gray-400 font-medium mt-1">{stat.label}</div>
             </div>
           ))}
         </div>
       </section>
-﻿      {/* ─── CATERING SERVICES SECTION ─── */}
-      <section id="services" className="py-20 px-6 bg-[#0E0906]">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
-            <span className="text-xs font-bold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-4 py-1.5 rounded-full border border-amber-500/20">
-              Our Core Services
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">Bespoke Catering Tailored For Every Occasion</h2>
-            <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
-              Whether celebrating a wedding, milestone birthday, or hosting an intimate family ceremony, we provide comprehensive catering setups with authentic heritage taste.
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Service 1 */}
-            <div className="glass-card-dark rounded-3xl p-8 hover:border-amber-400/40 transition-all duration-300 group flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-2xl group-hover:scale-110 transition-transform">
-                  🥞
-                </div>
-                <h3 className="text-xl font-bold text-white group-hover:text-amber-300 transition-colors">Live Dosa Party Experience</h3>
-                <p className="text-sm text-gray-400 leading-relaxed">
-                  On-site master chefs preparing sizzling hot crisp dosas, uthappams, piping sambar, and an assortment of fresh chutneys directly in front of your guests.
-                </p>
-              </div>
-              <div className="pt-6 border-t border-white/10 mt-6 flex items-center justify-between">
-                <span className="text-xs font-semibold text-amber-400">From £11.00 / guest</span>
-                <a href="#book" onClick={() => handleEnquireNow('Live Dosa Party (Weekday: £11 / Weekend: £12)')} className="text-xs font-bold text-white hover:text-amber-300 flex items-center gap-1">
-                  Enquire Now →
-                </a>
-              </div>
-            </div>
-
-            {/* Service 2 */}
-            <div className="glass-card-dark rounded-3xl p-8 hover:border-amber-400/40 transition-all duration-300 group flex flex-col justify-between border-amber-500/30 shadow-lg shadow-amber-950/20">
-              <div className="space-y-4">
-                <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 text-2xl group-hover:scale-110 transition-transform">
-                  🍛
-                </div>
-                <h3 className="text-xl font-bold text-white group-hover:text-amber-300 transition-colors">Grand Banquet Packages</h3>
-                <p className="text-sm text-gray-400 leading-relaxed">
-                  Sumptuous multi-course feast featuring premium starters, aromatic curries, traditional biryanis, warm breads, and artisanal Indian desserts.
-                </p>
-              </div>
-              <div className="pt-6 border-t border-white/10 mt-6 flex items-center justify-between">
-                <span className="text-xs font-semibold text-amber-400">5 Distinct Packages</span>
-                <a href="#menus" className="text-xs font-bold text-white hover:text-amber-300 flex items-center gap-1">
-                  View Packages →
-                </a>
-              </div>
-            </div>
-
-            {/* Service 3 */}
-            <div className="glass-card-dark rounded-3xl p-8 hover:border-amber-400/40 transition-all duration-300 group flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-2xl group-hover:scale-110 transition-transform">
-                  🏛️
-                </div>
-                <h3 className="text-xl font-bold text-white group-hover:text-amber-300 transition-colors">Party Hall &amp; Dry Hire</h3>
-                <p className="text-sm text-gray-400 leading-relaxed">
-                  Dedicated in-house banquet facilities equipped with dining seating, audio systems, ambient lighting, and full kitchen amenities in Reading.
-                </p>
-              </div>
-              <div className="pt-6 border-t border-white/10 mt-6 flex items-center justify-between">
-                <span className="text-xs font-semibold text-amber-400">Full Setup &amp; Service</span>
-                <a href="#book" onClick={() => handleEnquireNow('In-House Party Hall')} className="text-xs font-bold text-white hover:text-amber-300 flex items-center gap-1">
-                  Enquire Hall →
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ─── MENUS & PACKAGES SHOWCASE ─── */}
-      <section id="menus" className="py-20 px-6 bg-[#090604] border-t border-white/10">
+      <section id="menus" className="py-20 px-6 bg-[#070402] border-t border-white/10">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
             <span className="text-xs font-bold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-4 py-1.5 rounded-full border border-amber-500/20">
               Transparent Pricing &amp; Menus
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">Carefully Crafted Banquet Packages</h2>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">Our Catering Packages</h2>
             <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
               Every package is designed to delight your guests with genuine South Indian gourmet flavours. Select any package to pre-fill your booking enquiry.
             </p>
@@ -714,14 +646,14 @@ export default function HomePage() {
           {/* Interactive Tab Switcher */}
           <div className="flex flex-wrap gap-3 justify-center mb-12">
             {([
-              { id: 'packages', label: '🎁 Banquet Packages' },
-              { id: 'menu', label: '🍛 Detailed Menu Items' },
-              { id: 'live', label: '🍳 Live Dosa Counter' },
+              { id: 'packages', label: '🎁 Packages' },
+              { id: 'menu', label: '🍛 Menu Items' },
+              { id: 'live', label: '🥞 Live Dosa Counter' },
             ] as { id: MenuTab; label: string }[]).map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveMenuTab(tab.id)}
-                className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-200 flex items-center gap-2 ${activeMenuTab === tab.id ? 'text-white shadow-xl shadow-amber-950/40 scale-105' : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:border-white/20'}`}
+                className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer ${activeMenuTab === tab.id ? 'text-white shadow-xl shadow-amber-950/40 scale-105' : 'bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:border-white/20'}`}
                 style={activeMenuTab === tab.id ? { background: 'linear-gradient(135deg, #ED1C24 0%, #F5A623 100%)' } : {}}
               >
                 <span>{tab.label}</span>
@@ -735,7 +667,7 @@ export default function HomePage() {
               {NEW_PACKAGES.map((pkg: any) => (
                 <div
                   key={pkg.id}
-                  className="glass-card-dark rounded-3xl p-7 flex flex-col justify-between hover:border-amber-400/50 hover:-translate-y-1 transition-all duration-300 relative group"
+                  className="bg-[#140D08] border border-white/10 rounded-3xl p-7 flex flex-col justify-between hover:border-amber-400/50 hover:-translate-y-1 transition-all duration-300 relative group shadow-xl"
                 >
                   {pkg.tag && (
                     <div className="absolute top-5 right-5 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-red-600/90 text-white shadow-md">
@@ -746,158 +678,192 @@ export default function HomePage() {
                   <div>
                     <h3 className="text-2xl font-bold text-white mb-2">{pkg.name}</h3>
                     <div className="flex items-baseline gap-2 mb-4">
-                      <span className="text-3xl font-extrabold gold-text-gradient">£{pkg.pricePerPerson}</span>
+                      <span className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-red-500">£{pkg.pricePerPerson}</span>
                       <span className="text-xs text-gray-400 font-medium">/ person</span>
-                      {pkg.guestLabel && <span className="text-[11px] text-amber-300/80 ml-2">({pkg.guestLabel})</span>}
+                      <span className="text-xs text-amber-300/80 ml-auto font-semibold">{pkg.guestLabel}</span>
                     </div>
 
-                    <div className="border-t border-white/10 pt-4 mb-4">
-                      <div className="text-xs font-bold uppercase tracking-wider text-amber-400/90 mb-3">Included Courses:</div>
-                      <ul className="space-y-2.5">
-                        {pkg.items.map((item: string, i: number) => (
-                          <li key={i} className="text-xs text-gray-300 flex items-start gap-2.5 leading-relaxed">
-                            <span className="text-amber-400 mt-0.5 font-bold">✓</span>
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                    <div className="w-full h-px bg-white/10 my-4" />
 
-                    {pkg.complimentary && (
-                      <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 italic mb-6">
-                        🎁 {pkg.complimentary}
-                      </div>
-                    )}
+                    <ul className="space-y-2.5 mb-6">
+                      {pkg.items.map((item: string, i: number) => (
+                        <li key={i} className="text-sm text-gray-300 flex items-start gap-2.5">
+                          <span className="text-amber-400 font-bold text-sm leading-none mt-1">✓</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
 
-                  <button
-                    onClick={() => handleEnquireNow(pkg.name)}
-                    className="w-full py-3 rounded-xl font-bold text-white text-xs uppercase tracking-wider transition-all shadow-md hover:shadow-amber-500/20 flex items-center justify-center gap-2 group-hover:scale-[1.01]"
-                    style={{ background: 'linear-gradient(135deg, #ED1C24, #F5A623)' }}
-                  >
-                    <span>Enquire with this Package</span>
-                    <Icon name="ArrowRightIcon" size={14} />
-                  </button>
+                  <div>
+                    {pkg.complimentary && (
+                      <div className="text-xs text-amber-200/80 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 mb-5 leading-relaxed">
+                        🎁 <span className="font-semibold">{pkg.complimentary}</span>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={() => handleEnquireNow(pkg.name)}
+                      className="w-full py-3 rounded-xl font-bold text-sm text-white shadow-lg transition-all duration-200 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                      style={{ background: 'linear-gradient(135deg, #ED1C24 0%, #F5A623 100%)' }}
+                    >
+                      <span>Choose {pkg.name}</span>
+                      <Icon name="ArrowRightIcon" size={14} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
 
-          {/* TAB 2: DETAILED MENU CATEGORIES */}
+          {/* TAB 2: DETAILED MENU ITEMS */}
           {activeMenuTab === 'menu' && (
-            <div className="space-y-4 max-w-4xl mx-auto">
-              {MENU_CATEGORIES && Object.entries(MENU_CATEGORIES).map(([catKey, cat]: [string, any]) => (
-                <div key={catKey} className="glass-card-dark rounded-2xl border border-white/10 overflow-hidden transition-all">
-                  <button
-                    onClick={() => toggleSection(catKey)}
-                    className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">🍲</span>
-                      <div>
-                        <h4 className="text-base font-bold text-white">{cat.title || catKey}</h4>
-                        <span className="text-xs text-amber-400">{cat.items?.length || 0} Specialties Available</span>
-                      </div>
-                    </div>
-                    <Icon name={expandedSection === catKey ? 'ChevronUpIcon' : 'ChevronDownIcon'} size={20} className="text-gray-400" />
-                  </button>
-                  {expandedSection === catKey && (
-                    <div className="px-6 pb-6 pt-2 border-t border-white/10 bg-black/30">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                        {cat.items?.map((dish: string, idx: number) => (
-                          <div key={idx} className="text-xs text-gray-300 flex items-center gap-2 py-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                            <span>{dish}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* TAB 3: LIVE DOSA PARTY MENU */}
-          {activeMenuTab === 'live' && (
-            <div className="glass-card-dark rounded-3xl p-8 max-w-4xl mx-auto border border-amber-500/30">
-              <div className="text-center mb-8">
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-3.5 py-1 rounded-full border border-amber-500/20">
-                  Interactive Live Cooking Counter
-                </span>
-                <h3 className="text-2xl font-bold text-white mt-2">Live Dosa Party Inclusions</h3>
-                <p className="text-xs text-gray-400 mt-1">
-                  Weekday: £11.00/person (Min 35 guests) • Weekend/Bank Holiday: £12.00/person (Min 40 guests)
+            <div className="space-y-10">
+              <div className="text-center max-w-2xl mx-auto">
+                <h3 className="text-xl font-bold text-white mb-2">A La Carte Dish Selection</h3>
+                <p className="text-xs text-gray-400">
+                  Mix and match your course selections from our authentic Tamil &amp; South Indian vegetarian categories.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
-                  <h4 className="text-sm font-bold text-amber-300 uppercase tracking-wider mb-3">Sizzling Dosa Varieties</h4>
-                  <ul className="space-y-2 text-xs text-gray-300">
-                    <li>• Plain Crisp Golden Dosa</li>
-                    <li>• Traditional Masala Dosa (Potato filling)</li>
-                    <li>• Paneer Masala Dosa</li>
-                    <li>• Mysore Masala Dosa (Spicy red chutney)</li>
-                    <li>• Onion / Ghee Roast Dosa</li>
-                    <li>• Uthappam Varieties (Onion, Tomato, Mixed Veg)</li>
-                  </ul>
-                </div>
-                <div className="p-5 rounded-2xl bg-white/5 border border-white/10">
-                  <h4 className="text-sm font-bold text-amber-300 uppercase tracking-wider mb-3">Accompaniments &amp; Extras</h4>
-                  <ul className="space-y-2 text-xs text-gray-300">
-                    <li>• Steaming Piping Hot Vegetable Sambar</li>
-                    <li>• Coconut Chutney &amp; Tomato Chutney</li>
-                    <li>• Spicy Mint/Coriander Chutney</li>
-                    <li>• Complimentary Idlis or Medu Vada (Package dependent)</li>
-                    <li>• Authentic Filter Coffee Service (Available on request)</li>
-                  </ul>
-                </div>
-              </div>
-
-              <div className="mt-8 text-center">
-                <button
-                  onClick={() => handleEnquireNow('Live Dosa Party (Weekday: £11 / Weekend: £12)')}
-                  className="px-8 py-3.5 rounded-xl font-bold text-white text-xs uppercase tracking-wider shadow-lg hover:shadow-amber-500/25 transition-all"
-                  style={{ background: 'linear-gradient(135deg, #ED1C24, #F5A623)' }}
-                >
-                  Book Live Dosa Party Now
-                </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[
+                  { title: 'STATERS', items: MENU_CATEGORIES.staters, icon: '🍢' },
+                  { title: 'VEG MAINS', items: MENU_CATEGORIES.vegMains, icon: '🥦' },
+                  { title: 'PANEER MAINS', items: MENU_CATEGORIES.paneerMains, icon: '🧀' },
+                  { title: 'RICE & NOODLES', items: MENU_CATEGORIES.riceAndNoodles, icon: '🍚' },
+                  { title: 'BREADS', items: MENU_CATEGORIES.breads, icon: '🫓' },
+                  { title: 'DHAL', items: MENU_CATEGORIES.dhal, icon: '🍲' },
+                  { title: 'DESSERT', items: MENU_CATEGORIES.dessert, icon: '🍨' },
+                ].map((category) => (
+                  <div key={category.title} className="bg-[#140D08] rounded-3xl border border-white/10 overflow-hidden shadow-xl hover:border-amber-400/30 transition-colors">
+                    <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-gradient-to-r from-red-950/40 to-amber-950/40">
+                      <h4 className="font-bold text-sm tracking-wider text-amber-300 uppercase flex items-center gap-2">
+                        <span>{category.icon}</span>
+                        <span>{category.title}</span>
+                      </h4>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-gray-300">
+                        {category.items.length} items
+                      </span>
+                    </div>
+                    <ul className="p-5 space-y-2.5 max-h-72 overflow-y-auto">
+                      {category.items.map((item: string, idx: number) => (
+                        <li key={idx} className="text-xs text-gray-300 flex items-center gap-2.5 py-1 border-b border-white/5 last:border-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
               </div>
             </div>
           )}
+
+          {/* TAB 3: LIVE DOSA COUNTER */}
+          {activeMenuTab === 'live' && (
+            <div className="space-y-8 max-w-4xl mx-auto">
+              <div className="bg-[#140D08] rounded-3xl border border-amber-500/30 p-8 shadow-2xl relative overflow-hidden">
+                <div className="text-center max-w-xl mx-auto mb-8 space-y-3">
+                  <span className="inline-block text-xs font-bold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-4 py-1.5 rounded-full border border-amber-500/20">
+                    Live Chef Station
+                  </span>
+                  <h3 className="text-2xl sm:text-3xl font-extrabold text-white">Outdoor Live Dosa Party Counter</h3>
+                  <div className="flex flex-wrap items-center justify-center gap-4 text-sm font-semibold text-amber-300 pt-1">
+                    {LIVE_DOSA_PARTY_MENU.pricing.map((price: string, i: number) => (
+                      <span key={i} className="px-4 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                        {price}
+                      </span>
+                    ))}
+                    <span className="px-4 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300">
+                      Gazebo Hire (Flat Fee): £100.00
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                  {LIVE_DOSA_PARTY_MENU.items.map((item: string, idx: number) => (
+                    <div key={idx} className="p-4 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-3">
+                      <span className="text-xl">🥞</span>
+                      <span className="text-sm font-semibold text-gray-200">{item}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center text-xs text-amber-200 font-semibold mb-6">
+                  ⏱️ MINIMUM 2 HOURS CHEF SERVICE INCLUDED
+                </div>
+
+                <div className="text-center">
+                  <button
+                    onClick={() => handleEnquireNow('Outdoor Live Dosa Party')}
+                    className="px-8 py-3.5 rounded-xl text-white font-bold text-sm transition-all shadow-xl hover:scale-[1.02] cursor-pointer"
+                    style={{ background: 'linear-gradient(135deg, #ED1C24 0%, #F5A623 100%)' }}
+                  >
+                    Enquire Live Dosa Party
+                  </button>
+                </div>
+              </div>
+
+              {/* Extras */}
+              <div className="bg-[#140D08] rounded-3xl border border-white/10 p-7">
+                <h4 className="text-sm font-bold uppercase tracking-wider text-amber-400 mb-4 text-center">
+                  Popular Event Add-Ons &amp; Extras
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                  {EXTRAS.map((extra: any, idx: number) => (
+                    <div key={idx} className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-gray-300">
+                      <span className="font-medium">{extra.name}</span>
+                      <span className="font-bold text-amber-400">£{Number(extra.price).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       </section>
 
-      {/* ─── FREQUENTLY ASKED QUESTIONS ─── */}
-      <section id="faqs" className="py-20 px-6 bg-[#0E0906]">
+      {/* ─── FAQ SECTION ─── */}
+      <section id="faqs" className="py-20 px-6 bg-[#0E0805] border-t border-white/10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12 space-y-3">
             <span className="text-xs font-bold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-4 py-1.5 rounded-full border border-amber-500/20">
               Got Questions?
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white">Frequently Asked Questions</h2>
-            <p className="text-gray-400 text-sm">Everything you need to know about our outdoor and live catering setups.</p>
+            <p className="text-gray-400 text-sm max-w-xl mx-auto">
+              Everything you need to know about our outdoor live dosa catering and booking policies in Reading.
+            </p>
           </div>
 
-          <div className="space-y-3.5">
-            {faqs.map((faq, idx) => {
-              const faqKey = `faq-${idx}`;
-              const isOpen = expandedSection === faqKey;
+          <div className="space-y-4">
+            {faqs.map((faq, index) => {
+              const isOpen = expandedSection === `faq-${index}`;
               return (
-                <div key={idx} className="glass-card-dark rounded-2xl border border-white/10 overflow-hidden transition-all">
+                <div
+                  key={index}
+                  className="rounded-2xl border border-white/10 bg-[#140D08] overflow-hidden transition-all duration-200 hover:border-amber-500/40"
+                >
                   <button
-                    onClick={() => toggleSection(faqKey)}
-                    className="w-full px-6 py-4 text-left flex items-center justify-between gap-4 hover:bg-white/5 transition-colors"
+                    onClick={() => toggleSection(`faq-${index}`)}
+                    className="w-full px-6 py-5 flex items-center justify-between text-left font-bold text-gray-200 hover:text-amber-400 transition-colors cursor-pointer text-sm sm:text-base"
                   >
-                    <span className="text-sm font-semibold text-white">{faq.question}</span>
-                    <Icon name={isOpen ? 'ChevronUpIcon' : 'ChevronDownIcon'} size={18} className="text-amber-400 flex-shrink-0" />
+                    <span>{faq.question}</span>
+                    <span className={`transform transition-transform duration-200 text-amber-400 flex-shrink-0 ml-4 ${isOpen ? 'rotate-180 text-red-500' : ''}`}>
+                      <Icon name="ChevronDownIcon" size={18} />
+                    </span>
                   </button>
-                  {isOpen && (
-                    <div className="px-6 pb-5 pt-1 text-xs text-gray-300 leading-relaxed border-t border-white/10 bg-black/20">
+                  <div
+                    className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                      isOpen ? 'max-h-96 border-t border-white/10' : 'max-h-0'
+                    }`}
+                  >
+                    <div className="px-6 py-5 text-sm text-gray-400 leading-relaxed bg-black/20">
                       {faq.answer}
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             })}
@@ -906,6 +872,26 @@ export default function HomePage() {
       </section>
 
       <Footer />
+
+      {/* ─── CUSTOM ALERT MODAL ─── */}
+      {customHomeAlert && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+          <div className="bg-[#18110B] rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-sm border border-amber-500/30 flex flex-col items-center text-center">
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${customHomeAlert.type === 'success' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
+              <Icon name={customHomeAlert.type === 'success' ? 'CheckIcon' : 'ExclamationTriangleIcon'} size={28} />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">{customHomeAlert.type === 'success' ? 'Success' : 'Notice'}</h3>
+            <p className="text-sm text-gray-300 mb-6 leading-relaxed">{customHomeAlert.message}</p>
+            <button
+              onClick={() => setCustomHomeAlert(null)}
+              className="px-8 py-2.5 rounded-xl text-sm font-bold text-white transition-all shadow-lg cursor-pointer hover:brightness-110"
+              style={{ background: 'linear-gradient(135deg, #ED1C24 0%, #F5A623 100%)' }}
+            >
+              Acknowledge
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -559,12 +559,52 @@ export default function ManualBookingForm({
     discountReason,
   ]);
 
+  // ── Category quota resolver based on selected package ──
+  const getCategoryAllowedCount = (pkg: any, categoryKey: string): number => {
+    if (!pkg || !pkg.items || !Array.isArray(pkg.items)) return 999;
+    const keyMatchMap: Record<string, RegExp> = {
+      staters: /stater|starter/i,
+      vegMains: /veg\s*main/i,
+      riceAndNoodles: /rice|noodle/i,
+      paneerMains: /paneer/i,
+      breads: /bread|roti|naan/i,
+      dhal: /dhal|dal|lentil/i,
+      dessert: /dessert|sweet/i,
+    };
+    const regex = keyMatchMap[categoryKey];
+    if (!regex) return 999;
+
+    for (const item of pkg.items) {
+      if (regex.test(item)) {
+        const match = String(item).match(/^(\d+)/);
+        if (match) return parseInt(match[1], 10);
+      }
+    }
+    return 0; // Category not included in this package
+  };
+
   // ── Handlers for Menu & Add-ons ──
   const toggleDishSelection = (categoryKey: string, dishName: string) => {
     setSelectedDishes(prev => {
       const currentList = prev[categoryKey] || [];
       if (currentList.includes(dishName)) {
         return { ...prev, [categoryKey]: currentList.filter(d => d !== dishName) };
+      }
+      const maxAllowed = getCategoryAllowedCount(currentPackage, categoryKey);
+      if (maxAllowed === 0) {
+        setCustomAlert({
+          message: `${categoryKey === 'dhal' ? 'Dhal' : 'This category'} is not included in ${currentPackage?.name || 'this package'}. To add dishes for this category, please use the Add-on / Extra Dishes field below!`,
+          type: 'warning'
+        });
+        return prev;
+      }
+      if (currentList.length >= maxAllowed) {
+        const catLabel = categoryKey === 'staters' ? 'Staters' : categoryKey === 'vegMains' ? 'Vegetarian Mains' : categoryKey === 'paneerMains' ? 'Paneer Mains' : categoryKey;
+        setCustomAlert({
+          message: `${currentPackage?.name || 'Package'} allows maximum ${maxAllowed} ${catLabel}. You already selected ${maxAllowed}. To add more dishes, please use the "Add-on / Extra Dishes" field below!`,
+          type: 'warning'
+        });
+        return prev;
       }
       return { ...prev, [categoryKey]: [...currentList, dishName] };
     });
@@ -682,7 +722,7 @@ export default function ManualBookingForm({
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(img, 0, 0, width, height);
-        const dateText = `Madras Flavours • Uploaded: ${new Date().toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}`;
+        const dateText = `Madras Flavours Events Reading • Uploaded: ${new Date().toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}`;
         ctx.font = 'bold 14px sans-serif';
         const textWidth = ctx.measureText(dateText).width;
         ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
@@ -905,7 +945,7 @@ export default function ManualBookingForm({
   // Helper WhatsApp Quote
   const generateWhatsAppQuoteText = () => {
     const firstName = customerDetails.name.split(' ')[0] || 'Customer';
-    let text = `Hi ${firstName}, here is your event quote from *Madras Flavours Events*:\n\n`;
+    let text = `Hi ${firstName}, here is your event quote from *Madras Flavours Events Reading*:\n\n`;
     text += `📅 *Date:* ${customerDetails.date} (${customerDetails.timeSession})\n`;
     text += `👥 *Guests:* ${customerDetails.adults} Adults · ${customerDetails.kids4to10} Kids · ${customerDetails.kidsUnder4} Infants (Total ${totalGuests})\n`;
     text += `🍱 *Package:* ${currentPackage?.name} at £${effectivePackagePrice}/adult · £${effectiveKidsPrice}/kid\n\n`;
@@ -958,7 +998,7 @@ export default function ManualBookingForm({
                 {isEditMode ? 'Edit Direct Booking' : 'Direct Booking & Event Planner'}
               </h2>
               <p className="text-xs text-red-100 mt-0.5">
-                Madras Flavours Luxury Event Management • Dynamic Pricing, Logistics & Add-ons
+                Madras Flavours Events Reading • Dynamic Pricing, Logistics & Add-ons
               </p>
             </div>
           </div>
@@ -1070,7 +1110,7 @@ export default function ManualBookingForm({
                 <div>
                   <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wide flex items-center gap-2">
                     <Icon name="SparklesIcon" size={18} className="text-[#ED1C24]" />
-                    Select Madras Flavours Package
+                    Select Madras Flavours Events Reading Package
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">
                     Adult and Kids rates automatically adapt based on your selected package.
@@ -1567,11 +1607,35 @@ export default function ManualBookingForm({
                 </div>
                 {currentPackage?.items && (
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {currentPackage.items.map((itemStr: string, idx: number) => (
-                      <span key={idx} className="text-xs px-2.5 py-1 rounded-lg bg-white border border-red-200 text-gray-800 font-medium">
-                        ✓ {itemStr}
-                      </span>
-                    ))}
+                    {currentPackage.items.map((itemStr: string, idx: number) => {
+                      const match = itemStr.match(/^(\d+)\s*(.+)$/);
+                      const qty = match ? parseInt(match[1], 10) : 0;
+                      const name = match ? match[2].trim() : itemStr;
+                      const catKey = /stater|starter/i.test(name) ? 'staters' :
+                                     /veg\s*main/i.test(name) ? 'vegMains' :
+                                     /paneer/i.test(name) ? 'paneerMains' :
+                                     /rice|noodle/i.test(name) ? 'riceAndNoodles' :
+                                     /bread/i.test(name) ? 'breads' :
+                                     /dhal|dal/i.test(name) ? 'dhal' :
+                                     /dessert/i.test(name) ? 'dessert' : '';
+                      const currentSelectedCount = catKey ? (selectedDishes[catKey] || []).length : 0;
+                      const isFulfilled = catKey && qty > 0 && currentSelectedCount >= qty;
+
+                      return (
+                        <span
+                          key={idx}
+                          className={`text-xs px-2.5 py-1 rounded-lg font-medium border transition-all ${
+                            isFulfilled
+                              ? 'bg-emerald-50 border-emerald-300 text-emerald-800 font-bold shadow-2xs'
+                              : currentSelectedCount > 0
+                              ? 'bg-amber-50 border-amber-300 text-amber-800'
+                              : 'bg-white border-red-200 text-gray-800'
+                          }`}
+                        >
+                          {isFulfilled ? '✓' : currentSelectedCount > 0 ? '⏳' : '○'} {itemStr} ({currentSelectedCount}/{qty || '✓'})
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -1597,31 +1661,53 @@ export default function ManualBookingForm({
               ].map((category) => {
                 const selectedInThisCategory = selectedDishes[category.key] || [];
                 const addOnsInThisCategory = addOnMenuItems.filter(item => item.category === category.key);
+                const maxAllowed = getCategoryAllowedCount(currentPackage, category.key);
+                const isLimitReached = selectedInThisCategory.length >= maxAllowed && maxAllowed < 999;
 
                 return (
                   <div key={category.key} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-2xs space-y-4">
-                    <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                    <div className="flex items-center justify-between border-b border-gray-100 pb-3 flex-wrap gap-2">
                       <div className="flex items-center gap-2.5">
                         <div className="p-1.5 rounded-lg bg-red-50 text-[#ED1C24]">
                           <Icon name={category.icon} size={18} />
                         </div>
                         <h4 className="font-extrabold text-sm text-gray-900">{category.label}</h4>
                       </div>
-                      <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-700">
-                        {selectedInThisCategory.length + addOnsInThisCategory.length} selected
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {maxAllowed < 999 && (
+                          <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                            maxAllowed === 0
+                              ? 'bg-gray-100 text-gray-500 border border-gray-200'
+                              : isLimitReached
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                              : 'bg-amber-100 text-amber-800 border border-amber-300'
+                          }`}>
+                            {maxAllowed === 0
+                              ? '0 in package (Use Add-on below)'
+                              : `${selectedInThisCategory.length} / ${maxAllowed} selected ${isLimitReached ? '✓ (Quota Met)' : ''}`}
+                          </span>
+                        )}
+                        {addOnsInThisCategory.length > 0 && (
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-800 border border-orange-200">
+                            +{addOnsInThisCategory.length} Add-on
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Standard Dishes Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                       {category.items.map((dishName: string) => {
                         const isChecked = selectedInThisCategory.includes(dishName);
+                        const isBlocked = !isChecked && isLimitReached && maxAllowed < 999;
                         return (
                           <label
                             key={dishName}
                             className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
                               isChecked
                                 ? 'bg-red-50/80 border-red-400 font-bold text-red-950 shadow-2xs'
+                                : isBlocked
+                                ? 'bg-gray-50/30 border-gray-200/60 text-gray-400 opacity-70 hover:opacity-100'
                                 : 'bg-gray-50/50 border-gray-200 text-gray-700 hover:bg-gray-100'
                             }`}
                           >

@@ -8,8 +8,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Madras Flavours Events — Outdoor Catering Management',
-  description: 'Madras Flavours Events helps you plan and manage unforgettable outdoor catering services with ease.',
+  title: 'Madras Flavours Events Reading — Outdoor Catering & Events',
+  description: 'Madras Flavours Events Reading provides authentic pure vegetarian catering, live dosa counters, and event management across Reading and Berkshire.',
   icons: {
     icon: [
       { url: '/assets/images/logomf.png', type: 'image/png' }
