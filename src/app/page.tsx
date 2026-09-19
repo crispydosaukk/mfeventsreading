@@ -243,7 +243,7 @@ export default function HomePage() {
       
       const deposit = baseAmount > 0 ? Math.min(baseAmount, pricingDetails.depositPercentage) : 0;
       
-      await addDoc(collection(db, 'booking_requests'), {
+      const docRef = await addDoc(collection(db, 'booking_requests'), {
         name: bookingForm.name,
         email: bookingForm.email,
         phone: fullPhone,
@@ -263,18 +263,26 @@ export default function HomePage() {
       });
 
       try {
-        const sendBookingEmail = httpsCallable(functions, 'sendBookingEmail');
-        await sendBookingEmail({
-          name: bookingForm.name,
-          email: bookingForm.email,
-          phone: fullPhone,
-          eventType: bookingForm.eventType,
-          serviceType: bookingForm.serviceType,
-          date: bookingForm.date,
-          timeOfDay: bookingForm.timeOfDay,
-          guests: guestCount,
-          message: bookingForm.message,
-          package: bookingForm.selectedPackage || 'Not Selected',
+        await fetch('/api/send-enquiry-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bookingId: docRef.id,
+            name: bookingForm.name,
+            email: bookingForm.email,
+            phone: fullPhone,
+            eventType: bookingForm.eventType,
+            serviceType: bookingForm.serviceType,
+            date: bookingForm.date,
+            timeOfDay: bookingForm.timeOfDay,
+            guests: guestCount,
+            message: bookingForm.message,
+            selectedPackage: bookingForm.selectedPackage || 'Not Selected',
+            postCode: bookingForm.postCode,
+            address: bookingForm.address,
+            baseAmount,
+            deposit,
+          }),
         });
       } catch (emailError) {
         console.error("Failed to send notification email:", emailError);
