@@ -8,6 +8,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://madrasflavoursreading.events'),
   title: 'Madras Flavours Events Reading — Outdoor Catering & Events',
   description: 'Madras Flavours Events Reading provides authentic pure vegetarian catering, live dosa counters, and event management across Reading and Berkshire.',
   icons: {

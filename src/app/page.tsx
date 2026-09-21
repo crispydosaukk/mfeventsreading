@@ -48,6 +48,8 @@ export default function HomePage() {
   const [heroContent, setHeroContent] = useState<HeroContent>(DEFAULT_HERO_CONTENT);
   const [faqs, setFaqs] = useState<FaqItem[]>(DEFAULT_FAQS);
 
+  const [dataLoaded, setDataLoaded] = useState({ hero: false, menus: false });
+
   React.useEffect(() => {
     return onSnapshot(
       doc(db, 'site_data', 'hero_content'),
@@ -64,8 +66,12 @@ export default function HomePage() {
             secondaryBtnText: data.secondaryBtnText !== undefined ? data.secondaryBtnText : DEFAULT_HERO_CONTENT.secondaryBtnText,
           });
         }
+        setDataLoaded(prev => ({ ...prev, hero: true }));
       },
-      (err) => console.warn("Firestore hero_content notice:", err.message)
+      (err) => {
+        console.warn("Firestore hero_content notice:", err.message);
+        setDataLoaded(prev => ({ ...prev, hero: true }));
+      }
     );
   }, []);
 
@@ -100,6 +106,10 @@ export default function HomePage() {
           DRY_HIRE_PRICES: data.DRY_HIRE_PRICES || DEFAULT_DRY_HIRE_PRICES,
         });
       }
+      setDataLoaded(prev => ({ ...prev, menus: true }));
+    }, (err) => {
+      console.warn("Firestore menus notice:", err.message);
+      setDataLoaded(prev => ({ ...prev, menus: true }));
     });
   }, []);
 
@@ -305,6 +315,16 @@ export default function HomePage() {
   const toggleSection = (key: string) => {
     setExpandedSection(prev => prev === key ? null : key);
   };
+
+  const isReady = dataLoaded.hero && dataLoaded.menus;
+  if (!isReady) {
+    return (
+      <div className="min-h-screen bg-[#F2EDE3] flex flex-col items-center justify-center gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-600"></div>
+        <p className="text-amber-800 font-medium animate-pulse text-sm">Loading Madras Flavours...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F2EDE3] text-[#1A120B] overflow-x-hidden selection:bg-amber-500/30 selection:text-amber-900">
