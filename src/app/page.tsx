@@ -22,8 +22,10 @@ import {
 import {
   DEFAULT_HERO_CONTENT,
   DEFAULT_FAQS,
+  DEFAULT_HIGHLIGHT_METRICS,
   HeroContent,
   FaqItem,
+  MetricItem,
 } from '@/app/data/defaultContent';
 
 const EVENT_TYPES = ['Wedding', 'Birthday', 'Corporate', 'Anniversary', 'Graduation', 'Other'];
@@ -47,6 +49,22 @@ export default function HomePage() {
 
   const [heroContent, setHeroContent] = useState<HeroContent>(DEFAULT_HERO_CONTENT);
   const [faqs, setFaqs] = useState<FaqItem[]>(DEFAULT_FAQS);
+  const [highlightMetrics, setHighlightMetrics] = useState<MetricItem[]>(DEFAULT_HIGHLIGHT_METRICS);
+
+  React.useEffect(() => {
+    return onSnapshot(
+      doc(db, 'site_data', 'highlight_metrics'),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (Array.isArray(data.metrics) && data.metrics.length > 0) {
+            setHighlightMetrics(data.metrics);
+          }
+        }
+      },
+      (err) => console.warn("Firestore highlight_metrics notice:", err.message)
+    );
+  }, []);
 
   const [dataLoaded, setDataLoaded] = useState({ hero: false, menus: false });
 
@@ -645,13 +663,8 @@ export default function HomePage() {
       {/* ─── HIGHLIGHT METRICS STRIP ─── */}
       <section className="relative z-20 py-8 px-6 border-y border-amber-900/10 bg-[#E8E1D5]">
         <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          {[
-            { value: '500+', label: 'Celebrations Hosted' },
-            { value: '500', label: 'Max Guest Capacity' },
-            { value: '4.9 ★', label: 'Average Client Rating' },
-            { value: '100%', label: 'Pure Veg Fresh Preparation' },
-          ].map((stat) => (
-            <div key={stat.label} className="p-4 rounded-2xl bg-white/90 border border-amber-200/70 shadow-xs">
+          {highlightMetrics.map((stat, idx) => (
+            <div key={idx} className="p-4 rounded-2xl bg-white/90 border border-amber-200/70 shadow-xs">
               <div className="text-2xl sm:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-amber-600 to-amber-700">{stat.value}</div>
               <div className="text-xs text-gray-800 font-bold mt-1">{stat.label}</div>
             </div>

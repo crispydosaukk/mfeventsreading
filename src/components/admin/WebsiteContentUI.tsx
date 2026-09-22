@@ -7,8 +7,10 @@ import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import {
   DEFAULT_HERO_CONTENT,
   DEFAULT_FAQS,
+  DEFAULT_HIGHLIGHT_METRICS,
   HeroContent,
   FaqItem,
+  MetricItem,
 } from '@/app/data/defaultContent';
 
 interface WebsiteContentUIProps {
@@ -16,10 +18,13 @@ interface WebsiteContentUIProps {
 }
 
 export default function WebsiteContentUI({ onNotify }: WebsiteContentUIProps) {
-  const [activeTab, setActiveTab] = useState<'hero' | 'faqs'>('hero');
+  const [activeTab, setActiveTab] = useState<'hero' | 'metrics' | 'faqs'>('hero');
 
   const [hero, setHero] = useState<HeroContent>(DEFAULT_HERO_CONTENT);
   const [isSavingHero, setIsSavingHero] = useState(false);
+
+  const [metrics, setMetrics] = useState<MetricItem[]>(DEFAULT_HIGHLIGHT_METRICS);
+  const [isSavingMetrics, setIsSavingMetrics] = useState(false);
 
   const [faqs, setFaqs] = useState<FaqItem[]>(DEFAULT_FAQS);
   const [isSavingFaqs, setIsSavingFaqs] = useState(false);
@@ -65,8 +70,22 @@ export default function WebsiteContentUI({ onNotify }: WebsiteContentUIProps) {
       (err) => console.warn('WebsiteContentUI faqs notice:', err.message)
     );
 
+    const unsubMetrics = onSnapshot(
+      doc(db, 'site_data', 'highlight_metrics'),
+      (snap) => {
+        if (snap.exists()) {
+          const data = snap.data();
+          if (Array.isArray(data.metrics) && data.metrics.length > 0) {
+            setMetrics(data.metrics);
+          }
+        }
+      },
+      (err) => console.warn('WebsiteContentUI highlight_metrics notice:', err.message)
+    );
+
     return () => {
       unsubHero();
+      unsubMetrics();
       unsubFaqs();
     };
   }, []);
@@ -212,6 +231,19 @@ export default function WebsiteContentUI({ onNotify }: WebsiteContentUIProps) {
             }`}
           >
             <span>✨ Hero Section</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('metrics')}
+            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+              activeTab === 'metrics'
+                ? 'bg-white text-gray-900 shadow-sm font-bold'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <span>📊 Highlight Metrics</span>
+            <span className="bg-amber-100 text-amber-900 text-[10px] px-1.5 py-0.2 rounded-full font-bold">
+              {metrics.length}
+            </span>
           </button>
           <button
             onClick={() => setActiveTab('faqs')}
