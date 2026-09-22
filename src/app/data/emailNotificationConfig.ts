@@ -17,6 +17,8 @@ export interface SmtpConfig {
 
 export interface EmailNotificationConfig {
   enabled: boolean;
+  provider?: 'resend' | 'smtp';
+  resendApiKey?: string;
   recipients: EmailRecipient[];
   sendCustomerConfirmation: boolean;
   smtp: SmtpConfig;
@@ -25,6 +27,8 @@ export interface EmailNotificationConfig {
 
 export const DEFAULT_EMAIL_NOTIFICATION_CONFIG: EmailNotificationConfig = {
   enabled: true,
+  provider: 'resend',
+  resendApiKey: '',
   recipients: [
     {
       id: 'recipient-1',
@@ -53,7 +57,7 @@ export const DEFAULT_EMAIL_NOTIFICATION_CONFIG: EmailNotificationConfig = {
     user: 'zingbiteuk@gmail.com',
     pass: 'yyozpzropaysxtah',
     fromName: 'Madras Flavours Events Reading',
-    fromEmail: 'zingbiteuk@gmail.com',
+    fromEmail: 'bookings@madrasflavoursreading.events',
   },
 };
 
@@ -91,6 +95,13 @@ export function sanitizeEmailNotificationConfig(data: any): EmailNotificationCon
     recipients = [...DEFAULT_EMAIL_NOTIFICATION_CONFIG.recipients];
   }
 
+  const resendApiKey = String(
+    data.resendApiKey || process.env.RESEND_API_KEY || DEFAULT_EMAIL_NOTIFICATION_CONFIG.resendApiKey || ''
+  ).trim();
+
+  const provider: 'resend' | 'smtp' =
+    data.provider === 'smtp' ? 'smtp' : (resendApiKey ? 'resend' : 'smtp');
+
   const smtpData = data.smtp || {};
   const smtp: SmtpConfig = {
     host: String(smtpData.host || process.env.SMTP_HOST || DEFAULT_EMAIL_NOTIFICATION_CONFIG.smtp.host),
@@ -104,9 +115,12 @@ export function sanitizeEmailNotificationConfig(data: any): EmailNotificationCon
 
   return {
     enabled: data.enabled !== false,
+    provider,
+    resendApiKey,
     recipients,
     sendCustomerConfirmation: data.sendCustomerConfirmation !== false,
     smtp,
     updatedAt: data.updatedAt,
   };
 }
+

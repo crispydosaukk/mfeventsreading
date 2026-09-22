@@ -70,33 +70,28 @@ export async function POST(req: NextRequest) {
       activeRecipients.push('rahulbadugu22@gmail.com', 'madrasflavoursreading@gmail.com');
     }
 
-    // 4. Verify SMTP configuration
+    // 4. Verify Email configuration (Resend API or SMTP)
+    const resendApiKey =
+      emailConfig.resendApiKey ||
+      process.env.RESEND_API_KEY ||
+      '';
+    const useResend = emailConfig.provider !== 'smtp' && Boolean(resendApiKey);
+
     const smtp = emailConfig.smtp;
-    if (!smtp || !smtp.user || !smtp.pass) {
-      console.warn('SMTP credentials not configured. Skipping email dispatch.');
+    if (!useResend && (!smtp || !smtp.user || !smtp.pass)) {
+      console.warn('Mail credentials not configured. Skipping email dispatch.');
       return NextResponse.json({
         success: false,
-        reason: 'smtp_not_configured',
-        message: 'Enquiry saved in database. Outgoing SMTP credentials not yet filled in Admin Dashboard.',
+        reason: 'credentials_not_configured',
+        message: 'Enquiry saved in database. Outgoing mail credentials not yet filled in Admin Dashboard.',
         activeRecipients,
       });
     }
 
-    // 5. Create Nodemailer Transporter
-    const transporter = nodemailer.createTransport({
-      host: smtp.host || 'smtp.gmail.com',
-      port: Number(smtp.port) || 587,
-      secure: Boolean(smtp.secure),
-      auth: {
-        user: smtp.user,
-        pass: smtp.pass,
-      },
-      tls: {
-        rejectUnauthorized: false,
-      },
-    });
-
-    const sender = `"${smtp.fromName || 'Madras Flavours Events Reading'}" <${smtp.fromEmail || smtp.user}>`;
+    let sender = `"${smtp?.fromName || 'Madras Flavours Events Reading'}" <${smtp?.fromEmail || 'bookings@madrasflavoursreading.events'}>`;
+    if (useResend && (!smtp?.fromEmail || smtp.fromEmail.includes('@gmail.com'))) {
+      sender = `"${smtp?.fromName || 'Madras Flavours Events Reading'}" <bookings@madrasflavoursreading.events>`;
+    }
 
     // 6. Format Admin Notification Email
     const adminSubject = `✨ New Enquiry: ${name || 'Customer'} - ${eventType || 'Catering'} on ${date || 'TBD'}`;
@@ -408,41 +403,120 @@ export async function POST(req: NextRequest) {
     }
 
     // 8. Dispatch concurrently to all active admin recipients and customer
-    const tasks: Promise<any>[] = [];
-    activeRecipients.forEach((recipientEmail) => {
-      tasks.push(
-        transporter.sendMail({
-          ...adminMailOptionsBase,
-          to: recipientEmail,
-        })
-      );
-    });
-
-    if (customerMailOptions) {
-      tasks.push(transporter.sendMail(customerMailOptions));
-    }
-
-    const results = await Promise.allSettled(tasks);
-
-    const adminResults = results.slice(0, activeRecipients.length);
-    const adminSent = adminResults.some((r) => r.status === 'fulfilled');
-    const firstSuccessfulAdmin = adminResults.find((r) => r.status === 'fulfilled');
-    const adminMessageId = firstSuccessfulAdmin ? (firstSuccessfulAdmin as any).value?.messageId : null;
-
+    let adminSent = false;
     let customerSent = false;
-    if (customerMailOptions) {
-      const customerResult = results[results.length - 1];
-      customerSent = customerResult.status === 'fulfilled';
-      if (customerResult.status === 'rejected') {
-        console.warn('Failed to deliver customer confirmation email:', customerResult.reason);
-      }
-    }
+    let adminMessageId: string | null = null;
+    const errors: string[] = [];
 
-    adminResults.forEach((result, idx) => {
-      if (result.status === 'rejected') {
-        console.error(`Failed to deliver admin notification to ${activeRecipients[idx]}:`, result.reason);
+    if (useResend) {
+      // 8a. Send via Resend REST API (HTTPS port 443 — GoDaddy hosting firewall safe)
+      try {
+        const adminRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${resendApiKey}`,
+          },
+          body: JSON.stringify({
+            from: sender,
+            to: activeRecipients,
+            subject: adminSubject,
+            html: adminHtml,
+          }),
+        });
+        const adminData = await adminRes.json();
+        if (adminRes.ok) {
+          adminSent = true;
+          adminMessageId = adminData.id;
+        } else {
+          const errText = adminData.message || adminData.error || 'Failed to send admin email via Resend';
+          console.error('Resend admin dispatch error:', errText);
+          errors.push(`Admin: ${errText}`);
+        }
+      } catch (e: any) {
+        console.error('Resend network error for admin dispatch:', e);
+        errors.push(`Admin network: ${e?.message || e}`);
       }
-    });
+
+      if (customerMailOptions) {
+        try {
+          const custRes = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${resendApiKey}`,
+            },
+            body: JSON.stringify({
+              from: sender,
+              to: [email.trim()],
+              subject: customerMailOptions.subject,
+              html: customerMailOptions.html,
+            }),
+          });
+          const custData = await custRes.json();
+          if (custRes.ok) {
+            customerSent = true;
+          } else {
+            const errText = custData.message || custData.error || 'Failed to send customer confirmation via Resend';
+            console.warn('Resend customer dispatch notice:', errText);
+            errors.push(`Customer: ${errText}`);
+          }
+        } catch (e: any) {
+          console.warn('Resend customer network error:', e);
+          errors.push(`Customer network: ${e?.message || e}`);
+        }
+      }
+    } else {
+      // 8b. Nodemailer SMTP Fallback
+      const transporter = nodemailer.createTransport({
+        host: smtp?.host || 'smtp.gmail.com',
+        port: Number(smtp?.port) || 587,
+        secure: Boolean(smtp?.secure),
+        auth: {
+          user: smtp?.user || '',
+          pass: smtp?.pass || '',
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+      });
+
+      const tasks: Promise<any>[] = [];
+      activeRecipients.forEach((recipientEmail) => {
+        tasks.push(
+          transporter.sendMail({
+            ...adminMailOptionsBase,
+            to: recipientEmail,
+          })
+        );
+      });
+
+      if (customerMailOptions) {
+        tasks.push(transporter.sendMail(customerMailOptions));
+      }
+
+      const results = await Promise.allSettled(tasks);
+
+      const adminResults = results.slice(0, activeRecipients.length);
+      adminSent = adminResults.some((r) => r.status === 'fulfilled');
+      const firstSuccessfulAdmin = adminResults.find((r) => r.status === 'fulfilled');
+      adminMessageId = firstSuccessfulAdmin ? (firstSuccessfulAdmin as any).value?.messageId : null;
+
+      if (customerMailOptions) {
+        const customerResult = results[results.length - 1];
+        customerSent = customerResult.status === 'fulfilled';
+        if (customerResult.status === 'rejected') {
+          console.warn('Failed to deliver customer confirmation email:', customerResult.reason);
+        }
+      }
+
+      adminResults.forEach((result, idx) => {
+        if (result.status === 'rejected') {
+          console.error(`Failed to deliver admin notification to ${activeRecipients[idx]}:`, result.reason);
+          errors.push(`Admin (${activeRecipients[idx]}): ${result.reason?.message || result.reason}`);
+        }
+      });
+    }
 
     return NextResponse.json({
       success: adminSent || customerSent,
@@ -450,7 +524,10 @@ export async function POST(req: NextRequest) {
       recipients: activeRecipients,
       customerNotified: customerSent,
       adminSent,
+      provider: useResend ? 'resend' : 'smtp',
+      errors: errors.length > 0 ? errors : undefined,
     });
+
   } catch (err: any) {
     console.error('Error in send-enquiry-email API route:', err);
     return NextResponse.json(

@@ -273,7 +273,7 @@ export default function HomePage() {
       });
 
       try {
-        await fetch('/api/send-enquiry-email', {
+        const emailRes = await fetch('/api/send-enquiry-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -294,6 +294,10 @@ export default function HomePage() {
             deposit,
           }),
         });
+        const emailData = await emailRes.json().catch(() => null);
+        if (emailData && !emailData.success) {
+          console.warn("Notification email dispatch notice:", emailData.errors || emailData.error || emailData.message);
+        }
       } catch (emailError) {
         console.error("Failed to send notification email:", emailError);
       }
