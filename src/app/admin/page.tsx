@@ -540,6 +540,22 @@ export default function AdminPage() {
   const [historySearch, setHistorySearch] = useState('');
   const [customAlert, setCustomAlert] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [bookingToDelete, setBookingToDelete] = useState<{ id: string; name: string } | null>(null);
+  // Multi-select & Bulk Delete State
+  const [selectedEnquiryIds, setSelectedEnquiryIds] = useState<string[]>([]);
+  const [selectedBookingIds, setSelectedBookingIds] = useState<string[]>([]);
+  const [selectedHistoryIds, setSelectedHistoryIds] = useState<string[]>([]);
+  const [selectedDirectBookingIds, setSelectedDirectBookingIds] = useState<string[]>([]);
+  const [selectedCustomerIds, setSelectedCustomerIds] = useState<string[]>([]);
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    ids: string[];
+    title: string;
+    description: string;
+    itemCount: number;
+    itemNames: string[];
+    itemType?: 'enquiry' | 'booking' | 'history' | 'direct_booking' | 'customer';
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isUploadingProof, setIsUploadingProof] = useState(false);
   const [isUploadingFinalProof, setIsUploadingFinalProof] = useState(false);
   const [isUploadingExtraProof, setIsUploadingExtraProof] = useState(false);
@@ -1449,26 +1465,117 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
     }
   };
 
-  const handleDeleteBooking = (id: string, name: string) => {
-    setBookingToDelete({ id, name });
+  // ── Unified Delete Modal & Bulk Operations ──
+  const openDeleteModal = (
+    ids: string[],
+    names: string[],
+    itemType: 'enquiry' | 'booking' | 'history' | 'direct_booking' | 'customer'
+  ) => {
+    if (!ids || ids.length === 0) return;
+    const isBulk = ids.length > 1;
+    let typeLabel = 'Record';
+    if (itemType === 'enquiry') typeLabel = isBulk ? 'Enquiries' : 'Enquiry';
+    else if (itemType === 'booking') typeLabel = isBulk ? 'Bookings' : 'Booking';
+    else if (itemType === 'history') typeLabel = isBulk ? 'History Records' : 'History Record';
+    else if (itemType === 'direct_booking') typeLabel = isBulk ? 'Direct Bookings' : 'Direct Booking';
+    else if (itemType === 'customer') typeLabel = isBulk ? 'Customers' : 'Customer';
+
+    const title = isBulk ? `Delete ${ids.length} ${typeLabel}` : `Delete ${typeLabel}`;
+    const description = isBulk
+      ? `Are you sure you want to permanently delete these ${ids.length} selected ${typeLabel.toLowerCase()}? This action cannot be undone.`
+      : `Are you sure you want to permanently delete the ${typeLabel.toLowerCase()} for "${names[0] || 'this record'}"? This action cannot be undone.`;
+
+    setDeleteModal({
+      isOpen: true,
+      title,
+      description,
+      itemCount: ids.length,
+      ids,
+      itemNames: names,
+      itemType,
+    });
   };
 
-  const confirmDeleteBooking = async () => {
-    if (!bookingToDelete) return;
+  const handleConfirmDelete = async () => {
+    if (!deleteModal || deleteModal.ids.length === 0) return;
+    setIsDeleting(true);
+    const idsToDelete = [...deleteModal.ids];
     try {
-      await deleteDoc(doc(db, 'booking_requests', bookingToDelete.id));
-      await deleteDoc(doc(db, 'bookings', bookingToDelete.id));
-      setBookings(prev => prev.filter(b => b.id !== bookingToDelete.id));
-      if (selectedBooking?.id === bookingToDelete.id) {
+      await Promise.all(
+        idsToDelete.map(async (id) => {
+          try { await deleteDoc(doc(db, 'booking_requests', id)); } catch (_) {}
+          try { await deleteDoc(doc(db, 'bookings', id)); } catch (_) {}
+        })
+      );
+
+      setBookings(prev => prev.filter(b => !idsToDelete.includes(b.id)));
+
+      if (selectedBooking && idsToDelete.includes(selectedBooking.id)) {
         setSelectedBooking(null);
       }
-      setCustomAlert({ message: 'Booking deleted successfully', type: 'success' });
+      if (selectedCustomer) {
+        setSelectedCustomer(null);
+      }
+
+      setSelectedEnquiryIds(prev => prev.filter(id => !idsToDelete.includes(id)));
+      setSelectedBookingIds(prev => prev.filter(id => !idsToDelete.includes(id)));
+      setSelectedHistoryIds(prev => prev.filter(id => !idsToDelete.includes(id)));
+      setSelectedDirectBookingIds(prev => prev.filter(id => !idsToDelete.includes(id)));
+      setSelectedCustomerIds(prev => prev.filter(id => !idsToDelete.includes(id)));
+
+      setCustomAlert({
+        message: `${idsToDelete.length} ${idsToDelete.length === 1 ? 'record' : 'records'} deleted successfully.`,
+        type: 'success',
+      });
     } catch (error) {
-      console.error('Error deleting booking:', error);
-      setCustomAlert({ message: 'Error deleting booking. Please try again.', type: 'error' });
+      console.error('Error deleting records:', error);
+      setCustomAlert({ message: 'Error deleting records. Please try again.', type: 'error' });
     } finally {
-      setBookingToDelete(null);
+      setIsDeleting(false);
+      setDeleteModal(null);
     }
+  };
+
+  const handleDeleteBooking = (id: string, name: string) => {
+    openDeleteModal([id], [name], 'booking');
+  };
+
+  const handleDeleteCustomer = (customerId: string, customerName: string) => {
+    const matchingBookings = bookings.filter(b => {
+      const nameKey = (b.name || 'Unknown').trim().toLowerCase();
+      const contactKey = (b.email || b.phone || '').trim().toLowerCase();
+      return `${nameKey}_${contactKey}` === customerId;
+    });
+    const ids = matchingBookings.map(b => b.id);
+    setDeleteModal({
+      isOpen: true,
+      title: `Delete Customer: ${customerName}`,
+      description: `Are you sure you want to permanently delete customer profile "${customerName}" and all their ${ids.length} booking record${ids.length === 1 ? '' : 's'}? This action cannot be undone.`,
+      itemCount: ids.length,
+      ids,
+      itemNames: matchingBookings.map(b => `${b.eventType} (${b.date})`),
+      itemType: 'customer',
+    });
+  };
+
+  const handleBulkDeleteCustomers = () => {
+    if (selectedCustomerIds.length === 0) return;
+    const matchingBookings = bookings.filter(b => {
+      const nameKey = (b.name || 'Unknown').trim().toLowerCase();
+      const contactKey = (b.email || b.phone || '').trim().toLowerCase();
+      return selectedCustomerIds.includes(`${nameKey}_${contactKey}`);
+    });
+    const ids = matchingBookings.map(b => b.id);
+    const selectedCustomersList = customers.filter(c => selectedCustomerIds.includes(c.id));
+    setDeleteModal({
+      isOpen: true,
+      title: `Delete ${selectedCustomerIds.length} Customers`,
+      description: `Are you sure you want to permanently delete ${selectedCustomerIds.length} customer profiles and all their ${ids.length} associated booking records? This action cannot be undone.`,
+      itemCount: ids.length,
+      ids,
+      itemNames: selectedCustomersList.map(c => c.name),
+      itemType: 'customer',
+    });
   };
 
   
@@ -3147,34 +3254,111 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
 
               {showDirectBookingHistory ? (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 max-w-4xl mx-auto">
-                   <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                     <Icon name="ClockIcon" size={24} className="text-indigo-600" />
-                     Direct Bookings History
-                   </h2>
+                   <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
+                     <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                       <Icon name="ClockIcon" size={24} className="text-indigo-600" />
+                       Direct Bookings History
+                     </h2>
+                     {directBookingsHistory.length > 0 && (
+                       <div className="flex items-center gap-2">
+                         <button
+                           type="button"
+                           onClick={() => {
+                             const allIds = directBookingsHistory.map(b => b.id);
+                             const isAllSelected = allIds.every(id => selectedDirectBookingIds.includes(id));
+                             if (isAllSelected) {
+                               setSelectedDirectBookingIds(prev => prev.filter(id => !allIds.includes(id)));
+                             } else {
+                               setSelectedDirectBookingIds(prev => Array.from(new Set([...prev, ...allIds])));
+                             }
+                           }}
+                           className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+                         >
+                           <input
+                             type="checkbox"
+                             checked={directBookingsHistory.length > 0 && directBookingsHistory.every(b => selectedDirectBookingIds.includes(b.id))}
+                             onChange={() => {}}
+                             className="rounded text-indigo-600 pointer-events-none"
+                           />
+                           <span>{directBookingsHistory.every(b => selectedDirectBookingIds.includes(b.id)) ? 'Deselect All' : 'Select All'}</span>
+                         </button>
+                         {selectedDirectBookingIds.length > 0 && (
+                           <button
+                             type="button"
+                             onClick={() => {
+                               const selected = directBookingsHistory.filter(b => selectedDirectBookingIds.includes(b.id));
+                               openDeleteModal(
+                                 selectedDirectBookingIds,
+                                 selected.map(b => `${b.name} (${b.eventType} - ${b.date})`),
+                                 'direct_booking'
+                               );
+                             }}
+                             className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
+                           >
+                             <Icon name="TrashIcon" size={14} />
+                             Delete Selected ({selectedDirectBookingIds.length})
+                           </button>
+                         )}
+                       </div>
+                     )}
+                   </div>
                    {directBookingsHistory.length === 0 ? (
                      <div className="text-center text-gray-500 py-10 bg-gray-50 rounded-xl border border-gray-200">No direct bookings found.</div>
                    ) : (
                      <div className="space-y-3">
                        {directBookingsHistory.map(booking => (
-                         <div key={booking.id} onClick={() => setSelectedBooking(booking)} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 hover:bg-indigo-50 border border-gray-200 hover:border-indigo-200 rounded-xl cursor-pointer transition-colors group gap-4">
-                           <div>
-                             <div className="font-bold text-gray-900 flex items-center gap-2">
-                               {booking.name} 
-                               <span className="text-xs px-2 py-0.5 rounded-md font-semibold bg-gray-200 text-gray-700">#{booking.id.slice(-6).toUpperCase()}</span>
-                             </div>
-                             <div className="text-sm text-gray-500 flex items-center gap-4 mt-1">
-                               <span className="flex items-center gap-1"><Icon name="CalendarDaysIcon" size={14} /> {booking.date}</span>
-                               <span className="flex items-center gap-1"><Icon name="MapPinIcon" size={14} /> {booking.eventType}</span>
+                         <div
+                           key={booking.id}
+                           className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border transition-colors gap-4 ${
+                             selectedDirectBookingIds.includes(booking.id) ? 'bg-indigo-50/70 border-indigo-300 ring-2 ring-indigo-100' : 'bg-gray-50 hover:bg-indigo-50/40 border-gray-200'
+                           }`}
+                         >
+                           <div className="flex items-center gap-3">
+                             <input
+                               type="checkbox"
+                               checked={selectedDirectBookingIds.includes(booking.id)}
+                               onChange={(e) => {
+                                 e.stopPropagation();
+                                 setSelectedDirectBookingIds(prev =>
+                                   prev.includes(booking.id) ? prev.filter(id => id !== booking.id) : [...prev, booking.id]
+                                 );
+                               }}
+                               className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 cursor-pointer flex-shrink-0"
+                             />
+                             <div className="cursor-pointer" onClick={() => setSelectedBooking(booking)}>
+                               <div className="font-bold text-gray-900 flex items-center gap-2">
+                                 {booking.name} 
+                                 <span className="text-xs px-2 py-0.5 rounded-md font-semibold bg-gray-200 text-gray-700">#{booking.id.slice(-6).toUpperCase()}</span>
+                               </div>
+                               <div className="text-sm text-gray-500 flex items-center gap-4 mt-1">
+                                 <span className="flex items-center gap-1"><Icon name="CalendarDaysIcon" size={14} /> {booking.date}</span>
+                                 <span className="flex items-center gap-1"><Icon name="MapPinIcon" size={14} /> {booking.eventType}</span>
+                               </div>
                              </div>
                            </div>
-                           <div className="flex items-center gap-3">
+                           <div className="flex items-center gap-2">
                              <div className={`px-3 py-1 rounded-full text-xs font-bold ${
                                booking.status === 'completed' ? 'bg-emerald-100 text-emerald-800' :
                                booking.depositPaid ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800'
                              }`}>
                                {booking.status === 'completed' ? 'Completed' : booking.depositPaid ? 'Deposit Paid' : 'Pending Deposit'}
                              </div>
-                             <Icon name="ChevronRightIcon" size={20} className="text-gray-400 group-hover:text-indigo-600 transition-colors" />
+                             <button
+                               type="button"
+                               onClick={() => setSelectedBooking(booking)}
+                               className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-white rounded-lg transition-colors cursor-pointer"
+                               title="Manage Booking"
+                             >
+                               <Icon name="ChevronRightIcon" size={18} />
+                             </button>
+                             <button
+                               type="button"
+                               onClick={() => openDeleteModal([booking.id], [`${booking.name} (${booking.eventType} - ${booking.date})`], 'direct_booking')}
+                               className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                               title="Delete Direct Booking"
+                             >
+                               <Icon name="TrashIcon" size={16} />
+                             </button>
                            </div>
                          </div>
                        ))}
@@ -3309,8 +3493,50 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
           {/* ─── ENQUIRIES ─── */}
           {activeTab === 'enquiries' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-3">
                 <p className="text-sm text-gray-500">{enquiries.length} new enquiries awaiting your response</p>
+                {enquiries.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const allIds = enquiries.map(b => b.id);
+                        const isAllSelected = allIds.every(id => selectedEnquiryIds.includes(id));
+                        if (isAllSelected) {
+                          setSelectedEnquiryIds(prev => prev.filter(id => !allIds.includes(id)));
+                        } else {
+                          setSelectedEnquiryIds(prev => Array.from(new Set([...prev, ...allIds])));
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={enquiries.length > 0 && enquiries.every(b => selectedEnquiryIds.includes(b.id))}
+                        onChange={() => {}}
+                        className="rounded text-red-600 pointer-events-none"
+                      />
+                      <span>{enquiries.every(b => selectedEnquiryIds.includes(b.id)) ? 'Deselect All' : 'Select All'}</span>
+                    </button>
+                    {selectedEnquiryIds.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const selected = enquiries.filter(b => selectedEnquiryIds.includes(b.id));
+                          openDeleteModal(
+                            selectedEnquiryIds,
+                            selected.map(b => `${b.name} (${b.eventType} - ${b.date})`),
+                            'enquiry'
+                          );
+                        }}
+                        className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Icon name="TrashIcon" size={14} />
+                        Delete Selected ({selectedEnquiryIds.length})
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
               {enquiries.length === 0 && (
                 <div className="bg-white rounded-xl border border-gray-200 py-16 text-center">
@@ -3319,9 +3545,20 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                 </div>
               )}
               {enquiries.map((b) => (
-                <div key={b.id} className="bg-white rounded-xl border border-gray-200 p-5">
+                <div key={b.id} className={`bg-white rounded-xl border p-5 transition-all ${selectedEnquiryIds.includes(b.id) ? 'border-red-400 ring-2 ring-red-100' : 'border-gray-200'}`}>
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedEnquiryIds.includes(b.id)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          setSelectedEnquiryIds(prev =>
+                            prev.includes(b.id) ? prev.filter(id => id !== b.id) : [...prev, b.id]
+                          );
+                        }}
+                        className="w-4 h-4 rounded text-red-600 focus:ring-red-500 cursor-pointer flex-shrink-0"
+                      />
                       <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(237, 28, 36,0.1)' }}>
                         <span className="text-base font-bold" style={{ color: '#ED1C24' }}>{b.name.charAt(0)}</span>
                       </div>
@@ -3391,6 +3628,14 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                       <Icon name="EyeIcon" size={14} />
                       Full Details
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => openDeleteModal([b.id], [`${b.name} (${b.eventType} - ${b.date})`], 'enquiry')}
+                      className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                    >
+                      <Icon name="TrashIcon" size={14} />
+                      Delete
+                    </button>
                   </div>
                 </div>
               ))}
@@ -3418,11 +3663,64 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                 </select>
               </div>
 
+              {/* Floating Bulk Action Bar */}
+              {selectedBookingIds.length > 0 && (
+                <div className="sticky top-2 z-20 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="flex items-center gap-3">
+                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                    <span className="text-sm font-semibold">{selectedBookingIds.length} Bookings Selected</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedBookingIds([])}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium text-gray-300 hover:text-white hover:bg-gray-800 transition-colors"
+                    >
+                      Deselect All
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const selected = bookings.filter(b => selectedBookingIds.includes(b.id));
+                        openDeleteModal(
+                          selectedBookingIds,
+                          selected.map(b => `${b.name} (${b.eventType} - ${b.date})`),
+                          'booking'
+                        );
+                      }}
+                      className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Icon name="TrashIcon" size={14} />
+                      Delete Selected ({selectedBookingIds.length})
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm min-w-[750px]">
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
+                        <th className="px-4 py-3 w-10 text-center">
+                          <input
+                            type="checkbox"
+                            checked={
+                              filtered.filter(b => b.status !== 'new_enquiry' && b.status !== 'completed').length > 0 &&
+                              filtered.filter(b => b.status !== 'new_enquiry' && b.status !== 'completed').every(b => selectedBookingIds.includes(b.id))
+                            }
+                            onChange={(e) => {
+                              const visibleBookings = filtered.filter(b => b.status !== 'new_enquiry' && b.status !== 'completed');
+                              if (e.target.checked) {
+                                setSelectedBookingIds(prev => Array.from(new Set([...prev, ...visibleBookings.map(b => b.id)])));
+                              } else {
+                                const visibleIds = visibleBookings.map(b => b.id);
+                                setSelectedBookingIds(prev => prev.filter(id => !visibleIds.includes(id)));
+                              }
+                            }}
+                            className="w-4 h-4 rounded text-red-600 focus:ring-red-500 cursor-pointer"
+                          />
+                        </th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Customer</th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Event</th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Date</th>
@@ -3435,7 +3733,20 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                     </thead>
                     <tbody className="divide-y divide-gray-50">
                       {filtered.filter(b => b.status !== 'new_enquiry' && b.status !== 'completed').map((booking) => (
-                        <tr key={booking.id} className="hover:bg-gray-50/80 transition-colors">
+                        <tr key={booking.id} className={`transition-colors ${selectedBookingIds.includes(booking.id) ? 'bg-red-50/50 hover:bg-red-50/80' : 'hover:bg-gray-50/80'}`}>
+                          <td className="px-4 py-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              checked={selectedBookingIds.includes(booking.id)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                setSelectedBookingIds(prev =>
+                                  prev.includes(booking.id) ? prev.filter(id => id !== booking.id) : [...prev, booking.id]
+                                );
+                              }}
+                              className="w-4 h-4 rounded text-red-600 focus:ring-red-500 cursor-pointer"
+                            />
+                          </td>
                           <td className="px-4 py-3.5">
                             <div className="flex items-center gap-2.5">
                               <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(237, 28, 36,0.1)' }}>
@@ -3486,11 +3797,14 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                               <button onClick={() => setSelectedBooking(booking)} className="text-xs font-semibold flex items-center gap-1 hover:underline whitespace-nowrap" style={{ color: '#ED1C24' }}>
                                 Manage <Icon name="ChevronRightIcon" size={12} />
                               </button>
-                              {currentUser?.role === 'Super Admin' && (
-                                <button onClick={() => handleDeleteBooking(booking.id, booking.name)} className="text-red-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-50 transition-colors" title="Delete Booking">
-                                  <Icon name="TrashIcon" size={14} />
-                                </button>
-                              )}
+                              <button
+                                type="button"
+                                onClick={() => openDeleteModal([booking.id], [`${booking.name} (${booking.eventType} - ${booking.date})`], 'booking')}
+                                className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
+                                title="Delete Booking"
+                              >
+                                <Icon name="TrashIcon" size={14} />
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -3601,12 +3915,54 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
           )}
 
           {/* ─── CUSTOMERS ─── */}
-          {activeTab === 'customers' && (
+          {activeTab === 'customers' && (() => {
+            const filteredCustomers = customers.filter(c => !customerSearch || c.name.toLowerCase().includes(customerSearch.toLowerCase()) || c.email.toLowerCase().includes(customerSearch.toLowerCase()) || c.phone.toLowerCase().includes(customerSearch.toLowerCase()));
+            const isAllVisibleSelected = filteredCustomers.length > 0 && filteredCustomers.every(c => selectedCustomerIds.includes(c.id));
+
+            return (
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="relative flex-1 max-w-sm">
                   <Icon name="MagnifyingGlassIcon" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input type="text" placeholder="Search customers..." value={customerSearch} onChange={(e) => setCustomerSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none bg-white" />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400 mr-1">{customers.length} total customers</span>
+
+                  {filteredCustomers.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const visibleIds = filteredCustomers.map(c => c.id);
+                        if (isAllVisibleSelected) {
+                          setSelectedCustomerIds(prev => prev.filter(id => !visibleIds.includes(id)));
+                        } else {
+                          setSelectedCustomerIds(prev => Array.from(new Set([...prev, ...visibleIds])));
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isAllVisibleSelected}
+                        onChange={() => {}}
+                        className="rounded text-red-600 pointer-events-none"
+                      />
+                      <span>{isAllVisibleSelected ? 'Deselect All' : 'Select All'}</span>
+                    </button>
+                  )}
+
+                  {selectedCustomerIds.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleBulkDeleteCustomers}
+                      className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Icon name="TrashIcon" size={14} />
+                      Delete Selected ({selectedCustomerIds.length})
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -3614,6 +3970,24 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                   <table className="w-full text-sm min-w-[600px]">
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
+                        <th className="px-4 py-3 w-10 text-center">
+                          <input
+                            type="checkbox"
+                            checked={
+                              filteredCustomers.length > 0 &&
+                              filteredCustomers.every(c => selectedCustomerIds.includes(c.id))
+                            }
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedCustomerIds(prev => Array.from(new Set([...prev, ...filteredCustomers.map(c => c.id)])));
+                              } else {
+                                const visibleIds = filteredCustomers.map(c => c.id);
+                                setSelectedCustomerIds(prev => prev.filter(id => !visibleIds.includes(id)));
+                              }
+                            }}
+                            className="w-4 h-4 rounded text-red-600 focus:ring-red-500 cursor-pointer"
+                          />
+                        </th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Customer</th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Contact</th>
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Bookings</th>
@@ -3623,8 +3997,21 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
-                      {customers.filter(c => !customerSearch || c.name.toLowerCase().includes(customerSearch.toLowerCase()) || c.email.toLowerCase().includes(customerSearch.toLowerCase()) || c.phone.toLowerCase().includes(customerSearch.toLowerCase())).map((customer) => (
-                        <tr key={customer.id} className="hover:bg-gray-50/80 transition-colors">
+                      {filteredCustomers.map((customer) => (
+                        <tr key={customer.id} className={`transition-colors ${selectedCustomerIds.includes(customer.id) ? 'bg-red-50/50 hover:bg-red-50/80' : 'hover:bg-gray-50/80'}`}>
+                          <td className="px-4 py-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              checked={selectedCustomerIds.includes(customer.id)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                setSelectedCustomerIds(prev =>
+                                  prev.includes(customer.id) ? prev.filter(id => id !== customer.id) : [...prev, customer.id]
+                                );
+                              }}
+                              className="w-4 h-4 rounded text-red-600 focus:ring-red-500 cursor-pointer"
+                            />
+                          </td>
                           <td className="px-4 py-3.5">
                             <div className="flex items-center gap-2.5">
                               <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(237, 28, 36,0.1)' }}>
@@ -3650,6 +4037,14 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                                 WhatsApp
                               </a>
                               <button onClick={() => setSelectedCustomer(customer)} className="text-xs font-semibold hover:underline" style={{ color: '#ED1C24' }}>View</button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteCustomer(customer.id, customer.name)}
+                                className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                title="Delete Customer"
+                              >
+                                <Icon name="TrashIcon" size={14} />
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -3659,7 +4054,8 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                 </div>
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {/* ─── PAYMENTS ─── */}
           {activeTab === 'payments' && (
@@ -3781,19 +4177,78 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
           )}
 
           {/* ─── HISTORY ─── */}
-          {activeTab === 'history' && (
+          {activeTab === 'history' && (() => {
+            const filteredHistory = completedBookings.filter(b => !historySearch || b.name.toLowerCase().includes(historySearch.toLowerCase()) || b.email.toLowerCase().includes(historySearch.toLowerCase()) || b.phone.toLowerCase().includes(historySearch.toLowerCase()) || b.eventType.toLowerCase().includes(historySearch.toLowerCase()));
+            const isAllVisibleSelected = filteredHistory.length > 0 && filteredHistory.every(b => selectedHistoryIds.includes(b.id));
+
+            return (
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="relative flex-1 max-w-sm">
                   <Icon name="MagnifyingGlassIcon" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input type="text" placeholder="Search history..." value={historySearch} onChange={(e) => setHistorySearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none bg-white" />
                 </div>
-                <span className="text-xs text-gray-400">{completedBookings.length} completed</span>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400 mr-1">{completedBookings.length} completed</span>
+
+                  {filteredHistory.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const visibleIds = filteredHistory.map(b => b.id);
+                        if (isAllVisibleSelected) {
+                          setSelectedHistoryIds(prev => prev.filter(id => !visibleIds.includes(id)));
+                        } else {
+                          setSelectedHistoryIds(prev => Array.from(new Set([...prev, ...visibleIds])));
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isAllVisibleSelected}
+                        onChange={() => {}}
+                        className="rounded text-red-600 pointer-events-none"
+                      />
+                      <span>{isAllVisibleSelected ? 'Deselect All' : 'Select All'}</span>
+                    </button>
+                  )}
+
+                  {selectedHistoryIds.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const selected = bookings.filter(b => selectedHistoryIds.includes(b.id));
+                        openDeleteModal(
+                          selectedHistoryIds,
+                          selected.map(b => `${b.name} (${b.eventType} - ${b.date})`),
+                          'history'
+                        );
+                      }}
+                      className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Icon name="TrashIcon" size={14} />
+                      Delete Selected ({selectedHistoryIds.length})
+                    </button>
+                  )}
+                </div>
               </div>
-              {completedBookings.filter(b => !historySearch || b.name.toLowerCase().includes(historySearch.toLowerCase()) || b.email.toLowerCase().includes(historySearch.toLowerCase()) || b.phone.toLowerCase().includes(historySearch.toLowerCase()) || b.eventType.toLowerCase().includes(historySearch.toLowerCase())).map((b) => (
-                <div key={b.id} className="bg-white rounded-xl border border-gray-200 p-5">
+              {filteredHistory.map((b) => (
+                <div key={b.id} className={`bg-white rounded-xl border p-5 transition-all ${selectedHistoryIds.includes(b.id) ? 'border-red-400 ring-2 ring-red-100' : 'border-gray-200'}`}>
                   <div className="flex items-start justify-between gap-4 flex-wrap mb-4">
                     <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedHistoryIds.includes(b.id)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          setSelectedHistoryIds(prev =>
+                            prev.includes(b.id) ? prev.filter(id => id !== b.id) : [...prev, b.id]
+                          );
+                        }}
+                        className="w-4 h-4 rounded text-red-600 focus:ring-red-500 cursor-pointer flex-shrink-0"
+                      />
                       <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(237, 28, 36,0.1)' }}>
                         <span className="text-base font-bold" style={{ color: '#ED1C24' }}>{b.name.charAt(0)}</span>
                       </div>
@@ -3833,11 +4288,14 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                           Final Invoice
                         </button>
                       )}
-                      {currentUser?.role === 'Super Admin' && (
-                        <button onClick={() => handleDeleteBooking(b.id, b.name)} className="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-1.5 rounded-lg transition-colors" title="Delete History Record">
-                          <Icon name="TrashIcon" size={14} />
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => openDeleteModal([b.id], [`${b.name} (${b.eventType} - ${b.date})`], 'history')}
+                        className="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-1.5 rounded-lg transition-colors cursor-pointer"
+                        title="Delete History Record"
+                      >
+                        <Icon name="TrashIcon" size={14} />
+                      </button>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
@@ -3925,7 +4383,8 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                 </div>
               )}
             </div>
-          )}
+            );
+          })()}
 
           {/* ─── SETTINGS ─── */}
           {activeTab === 'settings' && (
@@ -7054,6 +7513,17 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                   </button>
                 </div>
               )}
+
+              <div className="pt-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => openDeleteModal([selectedBooking.id], [`${selectedBooking.name} (${selectedBooking.eventType} - ${selectedBooking.date})`], 'booking')}
+                  className="w-full flex items-center justify-center gap-2 text-xs font-semibold py-2 px-3 rounded-xl text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 transition-all cursor-pointer"
+                >
+                  <Icon name="TrashIcon" size={14} />
+                  Permanently Delete This Booking
+                </button>
+              </div>
             </div>
             </>
             )}
@@ -7130,33 +7600,78 @@ Once paid, please send a screenshot of the transfer confirmation here so we can 
                     </div>
                   ))}
                 </div>
+
+                <div className="pt-4 border-t border-gray-100 mt-5">
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteCustomer(selectedCustomer.id, selectedCustomer.name)}
+                    className="w-full flex items-center justify-center gap-2 text-xs font-semibold py-2.5 px-4 rounded-xl text-red-600 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 transition-all cursor-pointer"
+                  >
+                    <Icon name="TrashIcon" size={15} />
+                    Delete Customer &amp; Associated Bookings
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ─── DELETE CONFIRMATION MODAL ─── */}
-      {bookingToDelete && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm border border-gray-100 flex flex-col items-center text-center animate-in fade-in zoom-in duration-200">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4 bg-rose-50 text-rose-500">
-              <Icon name="TrashIcon" size={24} />
+      {/* ─── ENHANCED DELETE CONFIRMATION MODAL ─── */}
+      {deleteModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md border border-gray-100 flex flex-col items-center text-center animate-in zoom-in-95 duration-200">
+            <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4 bg-rose-50 text-rose-600 ring-8 ring-rose-50/50">
+              <Icon name="TrashIcon" size={26} />
             </div>
-            <h3 className="text-base font-bold text-gray-900 mb-1">Delete Booking</h3>
-            <p className="text-sm text-gray-500 mb-6">Are you sure you want to permanently delete the booking for <span className="font-semibold text-gray-900">{bookingToDelete.name}</span>? This action cannot be undone.</p>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">{deleteModal.title}</h3>
+            <p className="text-sm text-gray-500 mb-4">{deleteModal.description}</p>
+
+            {deleteModal.itemNames && deleteModal.itemNames.length > 0 && (
+              <div className="w-full bg-gray-50 rounded-xl p-3 mb-5 max-h-36 overflow-y-auto border border-gray-200 text-left text-xs text-gray-700 space-y-1">
+                <div className="font-semibold text-gray-400 uppercase tracking-wider text-[10px] mb-1.5">
+                  Items to be permanently removed:
+                </div>
+                {deleteModal.itemNames.slice(0, 8).map((name, i) => (
+                  <div key={i} className="flex items-center gap-2 truncate">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 flex-shrink-0" />
+                    <span className="truncate font-medium text-gray-800">{name}</span>
+                  </div>
+                ))}
+                {deleteModal.itemNames.length > 8 && (
+                  <div className="text-gray-400 italic text-[11px] pt-1 pl-3.5">
+                    + {deleteModal.itemNames.length - 8} more record{deleteModal.itemNames.length - 8 === 1 ? '' : 's'}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="flex gap-3 w-full">
               <button
-                onClick={() => setBookingToDelete(null)}
-                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setDeleteModal(null)}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 Cancel
               </button>
               <button
-                onClick={confirmDeleteBooking}
-                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 transition-colors shadow-sm"
+                type="button"
+                disabled={isDeleting}
+                onClick={handleConfirmDelete}
+                className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
               >
-                Delete
+                {isDeleting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon name="TrashIcon" size={16} />
+                    <span>Confirm Delete</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

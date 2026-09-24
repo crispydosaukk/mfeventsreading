@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           from: fromAddress,
           to: [testRecipient.trim()],
-          subject: '✅ Madras Flavours Events: Email Service Test Succeeded',
+          subject: '[Success] Madras Flavours Events: Email Service Test Succeeded',
           html: testHtml,
         }),
       });
