@@ -370,10 +370,16 @@ export default function HomePage() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.12]">
-              {heroContent.titleLine1} <br className="hidden sm:inline" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-amber-600 to-amber-700 font-display">
-                {heroContent.titleHighlight}
-              </span>
+              {heroContent.titleLine1}
+              {heroContent.titleHighlight ? (
+                <>
+                  {' '}
+                  <br className="hidden sm:inline" />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-amber-600 to-amber-700 font-display">
+                    {heroContent.titleHighlight}
+                  </span>
+                </>
+              ) : null}
             </h1>
 
             <p className="text-base sm:text-lg text-gray-700 max-w-2xl lg:mx-0 mx-auto leading-relaxed font-medium">
@@ -506,16 +512,16 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  {/* Service Format */}
+                  {/* Service Type */}
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Service Format *</label>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Service Type *</label>
                     <select
                       required
                       value={bookingForm.serviceType}
                       onChange={(e) => setBookingForm({ ...bookingForm, serviceType: e.target.value })}
                       className="w-full bg-white text-gray-900 border border-gray-300 rounded-xl px-3.5 py-2.5 text-sm font-medium focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-all"
                     >
-                      <option value="">Select Service Format</option>
+                      <option value="">Select Service Type</option>
                       <option value="Outdoor Catering">Outdoor Catering (At your home / venue)</option>
                       <option value="Party Hall Booking">In-House Party Hall Booking (Reading)</option>
                     </select>

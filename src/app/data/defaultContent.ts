@@ -32,13 +32,13 @@ export const DEFAULT_HIGHLIGHT_METRICS: MetricItem[] = [
 
 export const DEFAULT_HERO_CONTENT: HeroContent = {
   badgeText: '100% PURE VEGETARIAN CATERING • READING & BERKSHIRE',
-  titleLine1: 'Elevate Your Celebration With Authentic',
-  titleHighlight: 'Madras Flavours Events Reading',
-  subtitle: 'Experience the pinnacle of authentic South Indian vegetarian hospitality. From sizzling live dosa counters to bespoke catering feasts, freshly crafted with traditional spices and unmatched finesse.',
+  titleLine1: 'Exceptional Catering For Every Occasion',
+  titleHighlight: '',
+  subtitle: 'Madras Flavours offers authentic South Indian pure vegetarian outdoor catering and live dosa catering services across London. From intimate gatherings to large celebrations, we create delicious menus designed to delight every guest. With a strong focus on quality, freshness and authenticity, our catering service delivers an exceptional dining experience, wherever your celebration takes place.',
   tags: [
-    { icon: '🥞', text: 'Sizzling Live Dosa Party' },
-    { icon: '🍛', text: 'Curated Catering Packages' },
-    { icon: '⚡', text: '30 to 500+ Guest Capacity' }
+    { icon: '🥞', text: 'Live Dosa Party Stations' },
+    { icon: '🍛', text: 'Bespoke Catering Experiences' },
+    { icon: '⚡', text: '100% Pure Vegetarian' }
   ],
   primaryBtnText: 'View Menus & Packages',
   secondaryBtnText: 'Request a Booking'

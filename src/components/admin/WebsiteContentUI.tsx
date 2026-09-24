@@ -442,7 +442,9 @@ export default function WebsiteContentUI({ onNotify }: WebsiteContentUIProps) {
 
                 <h1 className="text-2xl font-extrabold text-white leading-tight">
                   {hero.titleLine1}{' '}
-                  <span className="text-amber-400">{hero.titleHighlight}</span>
+                  {hero.titleHighlight ? (
+                    <span className="text-amber-400">{hero.titleHighlight}</span>
+                  ) : null}
                 </h1>
 
                 <p className="text-xs text-gray-300 line-clamp-3 leading-relaxed">
